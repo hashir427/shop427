@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Kisaan Khata - Dukan</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+<div class="container py-3">
+  <!-- Top Action Bar: Search, Add Customer & Settings -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="flex-grow-1">
+      <input id="s" class="form-control" placeholder="Customer ya destination/city search karein...">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-em text-nowrap" data-bs-toggle="modal" data-bs-target="#newCustomerModal">
+        <i class="bi bi-person-plus-fill"></i> + Naya Customer
+      </button>
+      <button class="btn btn-outline-success text-nowrap" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <i class="bi bi-gear-fill"></i> Dukan Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Khata Table -->
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Destination / City</th>
+            <th class="text-end">Khata Balance</th>
+            <th class="text-end" style="min-width: 380px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="t"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Naya Customer Add Karne Ka Modal -->
+<div class="modal fade" id="newCustomerModal" tabindex="-1" aria-labelledby="newCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="newCustomerModalLabel"><i class="bi bi-person-plus"></i> Naya Customer Darj Karein</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Customer Ka Naam <span class="text-danger">*</span></label>
+          <input type="text" id="nc_name" class="form-control" placeholder="Maslan: Muhammad Akram">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Number</label>
+          <input type="text" id="nc_phone" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Destination / City / Ilaqa</label>
+          <input type="text" id="nc_village" class="form-control" placeholder="Maslan: Faisalabad, Lahore, Chak No 45">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Pehla Udhaar / Starting Balance (Agar koi hai)</label>
+          <input type="number" id="nc_balance" class="form-control" value="0" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="addNewCustomer()"><i class="bi bi-check-circle"></i> Customer Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Edit Karne Ka Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="editCustomerModalLabel"><i class="bi bi-pencil-square"></i> Customer Edit Karein</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ec_id">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Customer Ka Naam <span class="text-danger">*</span></label>
+          <input type="text" id="ec_name" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Number</label>
+          <input type="text" id="ec_phone" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Destination / City / Ilaqa</label>
+          <input type="text" id="ec_village" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Khata Balance (Baqaya Udhaar)</label>
+          <input type="number" id="ec_balance" class="form-control" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="updateCustomer()"><i class="bi bi-save"></i> Tabdeeli Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dukan & Payment Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="settingsModalLabel"><i class="bi bi-shop"></i> Dukan &amp; Payment Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Dukan Ka Naam (English)</label>
+          <input id="st_name" class="form-control" placeholder="e.g. Kisan Veterinary Clinic">
+        </div>
+        <div class="mb-1">
+          <label class="form-label fw-semibold">دکان کا نام (اردو)</label>
+          <input id="st_name_ur" class="form-control" dir="rtl" style="font-family:'Noto Nastaliq Urdu',serif;text-align:right" placeholder="مثلاً کسان ویٹرنری کلینک">
+        </div>
+        <div class="form-text mb-3">English ya Urdu mein se koi ek zaroori hai.</div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">EasyPaisa Mobile Number</label>
+          <input id="st_ep_no" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">EasyPaisa Account Title (Naam)</label>
+          <input id="st_ep_title" class="form-control" placeholder="Account par darj naam">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">JazzCash Mobile Number</label>
+          <input id="st_jc_no" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">JazzCash Account Title (Naam)</label>
+          <input id="st_jc_title" class="form-control" placeholder="Account par darj naam">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="saveSettings()"><i class="bi bi-save"></i> Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Formal Invoice Receipt Template for PNG (Hidden) -->
+<div id="rc" style="position:fixed;left:-9999px;top:0;width:550px;background:#ffffff;border:2px solid #064e3b;font-family:'Inter',sans-serif;color:#1e293b;padding:0;box-sizing:border-box;">
+  <div style="background:#064e3b;color:#ffffff;padding:20px;text-align:center;">
+    <div id="rc_shop_name" style="font-size:22px;font-weight:700;letter-spacing:0.5px;"></div>
+    <div id="rc_shop_ur" style="font-family:'Noto Nastaliq Urdu',serif;font-size:16px;margin-top:4px;"></div>
+    <div style="font-size:12px;opacity:0.85;margin-top:6px;border-top:1px solid rgba(255,255,255,0.2);padding-top:6px;">UDHAAR REMINDER &amp; STATEMENT SLIP</div>
+  </div>
+
+  <div style="padding:22px;">
+    <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:18px;">
+      <tr>
+        <td style="padding:4px 0;"><strong>Customer Name:</strong> <span id="rn"></span></td>
+        <td style="padding:4px 0;text-align:right;"><strong>Date:</strong> <span id="rc_date"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;"><strong>Phone:</strong> <span id="rc_phone"></span></td>
+        <td style="padding:4px 0;text-align:right;"><strong>Slip No:</strong> <span id="rc_slip"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;" colspan="2"><strong>Destination / City:</strong> <span id="rc_village"></span></td>
+      </tr>
+    </table>
+
+    <table style="width:100%;font-size:13px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:18px;">
+      <thead>
+        <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;text-align:left;">
+          <th style="padding:10px;border-right:1px solid #cbd5e1;">Description</th>
+          <th style="padding:10px;text-align:right;">Amount (PKR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:10px;border-right:1px solid #cbd5e1;">Previous Pending Balance (پچھلا ادھار)</td>
+          <td style="padding:10px;text-align:right;font-weight:600;" id="rb_sub"></td>
+        </tr>
+        <tr style="background:#fef2f2;">
+          <td style="padding:12px 10px;border-right:1px solid #cbd5e1;font-weight:700;color:#991b1b;">Total Payable Balance (کل واجب الادا)</td>
+          <td style="padding:12px 10px;text-align:right;font-size:18px;font-weight:800;color:#b91c1c;" id="rb"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:12px;font-size:13px;margin-bottom:16px;">
+      <div style="font-weight:700;color:#065f46;margin-bottom:4px;border-bottom:1px solid #a7f3d0;padding-bottom:3px;">Payment Account Details (رقم بھیجنے کی تفصیل):</div>
+      <div id="rp" style="line-height:1.7;color:#0f172a;"></div>
+    </div>
+
+    <div style="text-align:center;font-family:'Noto Nastaliq Urdu',serif;font-size:14px;color:#334155;line-height:1.8;border-top:1px dashed #cbd5e1;padding-top:10px;">
+      محترم گاہک، براہِ کرم بقایا رقم جلد از جلد ادا فرمائیں۔ شکریہ!
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+renderNav('khata.html');
+let C = [], S = {};
+
+function populateSettings() {
+  document.getElementById('st_name').value = S.shop_name || '';
+  document.getElementById('st_name_ur').value = S.shop_name_ur || '';
+  document.getElementById('st_ep_no').value = S.easypaisa_no || '';
+  document.getElementById('st_ep_title').value = S.easypaisa_title || '';
+  document.getElementById('st_jc_no').value = S.jazzcash_no || '';
+  document.getElementById('st_jc_title').value = S.jazzcash_title || '';
+}
+
+async function load() {
+  try {
+    await requireLogin();
+    S = await getSettings();
+    populateSettings();
+    applyShop(S);
+    C = await ok(db.from('kisan_vet_customers').select('*').order('khata_balance', { ascending: false }));
+    draw();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+async function addNewCustomer() {
+  const name = document.getElementById('nc_name').value.trim();
+  const phone = document.getElementById('nc_phone').value.trim();
+  const village = document.getElementById('nc_village').value.trim();
+  const balance = parseFloat(document.getElementById('nc_balance').value) || 0;
+
+  if (!name) {
+    return toast('Customer ka naam likhna zaroori hai', false);
+  }
+
+  try {
+    await ok(db.from('kisan_vet_customers').insert([{
+      name: name,
+      phone: phone,
+      village: village,
+      khata_balance: balance
+    }]));
+
+    toast('Naya customer kamyabi se darj ho gaya!');
+    
+    document.getElementById('nc_name').value = '';
+    document.getElementById('nc_phone').value = '';
+    document.getElementById('nc_village').value = '';
+    document.getElementById('nc_balance').value = '0';
+
+    const modalEl = document.getElementById('newCustomerModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    await load();
+  } catch (e) {
+    toast('Customer save nahi ho saka: ' + e.message, false);
+  }
+}
+
+function openEditCustomer(id) {
+  const c = C.find(x => x.id == id);
+  if (!c) return;
+
+  document.getElementById('ec_id').value = c.id;
+  document.getElementById('ec_name').value = c.name || '';
+  document.getElementById('ec_phone').value = c.phone || '';
+  document.getElementById('ec_village').value = c.village || '';
+  document.getElementById('ec_balance').value = c.khata_balance || 0;
+
+  const modalEl = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+  modalEl.show();
+}
+
+async function updateCustomer() {
+  const id = document.getElementById('ec_id').value;
+  const name = document.getElementById('ec_name').value.trim();
+  const phone = document.getElementById('ec_phone').value.trim();
+  const village = document.getElementById('ec_village').value.trim();
+  const balance = parseFloat(document.getElementById('ec_balance').value) || 0;
+
+  if (!name) {
+    return toast('Customer ka naam khali nahi ho sakta', false);
+  }
+
+  try {
+    await ok(db.from('kisan_vet_customers').update({
+      name: name,
+      phone: phone,
+      village: village,
+      khata_balance: balance
+    }).eq('id', id));
+
+    toast('Customer detail kamyabi se update ho gayi!');
+
+    const modalEl = document.getElementById('editCustomerModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    await load();
+  } catch (e) {
+    toast('Update error: ' + e.message, false);
+  }
+}
+
+async function saveSettings() {
+  const payload = {
+    shop_name: document.getElementById('st_name').value.trim(),
+    shop_name_ur: document.getElementById('st_name_ur').value.trim(),
+    easypaisa_no: document.getElementById('st_ep_no').value.trim(),
+    easypaisa_title: document.getElementById('st_ep_title').value.trim(),
+    jazzcash_no: document.getElementById('st_jc_no').value.trim(),
+    jazzcash_title: document.getElementById('st_jc_title').value.trim()
+  };
+  if (!payload.shop_name && !payload.shop_name_ur) {
+    return toast('Dukan ka naam English ya Urdu mein likhein', false);
+  }
+
+  try {
+    if (S && S.id) {
+      await ok(db.from('kisan_vet_settings').update(payload).eq('id', S.id));
+    } else {
+      await ok(db.from('kisan_vet_settings').insert([payload]));
+    }
+    toast('Settings kamyabi se save ho gayin!');
+    const modalEl = document.getElementById('settingsModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+    await load();
+  } catch (e) {
+    toast('Settings save nahi huin: ' + e.message, false);
+  }
+}
+
+function draw() {
+  const q = s.value.toLowerCase();
+  t.innerHTML = C.filter(c => (c.name + ' ' + (c.phone || '') + ' ' + (c.village || '')).toLowerCase().includes(q)).map(c => `
+    <tr>
+      <td class="fw-semibold">${esc(c.name)}</td>
+      <td>${esc(c.phone || '-')}</td>
+      <td><span class="badge bg-light text-dark border">${esc(c.village || '-')}</span></td>
+      <td class="text-end fw-bold ${c.khata_balance > 0 ? 'text-danger' : 'text-success'}">${rs(c.khata_balance)}</td>
+      <td class="text-nowrap text-end">
+        <button class="btn btn-sm btn-outline-primary" onclick="openEditCustomer(${c.id})"><i class="bi bi-pencil"></i> Edit</button>
+        <button class="btn btn-sm btn-em" onclick="pay(${c.id})"><i class="bi bi-cash-coin"></i> Wasooli</button>
+        <button class="btn btn-sm btn-success" onclick="wa(${c.id})"><i class="bi bi-whatsapp"></i> Form Parchi</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="delCustomer(${c.id})"><i class="bi bi-trash"></i> Delete</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="text-center text-muted">Koi customer nahi</td></tr>';
+}
+
+async function pay(id) {
+  const c = C.find(x => x.id == id);
+  const a = parseFloat(prompt('Wasooli ki raqam (Rs) - ' + c.name + '\nBaqi: ' + rs(c.khata_balance)));
+  if (!a || a <= 0) return;
+  if (a > c.khata_balance && !confirm('Raqam baqi se zyada hai. Balance 0 kar dein?')) return;
+  try {
+    await ok(db.from('kisan_vet_customers').update({ khata_balance: Math.max(+c.khata_balance - a, 0) }).eq('id', id));
+
+    await ok(db.from('kisan_vet_sales').insert({
+      customer_id: id,
+      customer_name: c.name,
+      total_amount: a,
+      cash_paid: a,
+      udhaar_amount: 0,
+      items: [{ name: 'Udhaar Wasooli / Jama', qty: 1, price: a, total: a }]
+    }));
+
+    toast('Wasooli jama ho gayi: ' + rs(a));
+    load();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+async function delCustomer(id) {
+  const c = C.find(x => x.id == id);
+  if (!confirm(`Kya aap waqai ${c.name} ka record mukammal delete karna chahte hain?`)) return;
+  try {
+    await ok(db.from('kisan_vet_customers').delete().eq('id', id));
+    toast('Customer record delete ho gaya');
+    load();
+  } catch (e) {
+    toast('Delete error: ' + e.message, false);
+  }
+}
+
+async function wa(id) {
+  const c = C.find(x => x.id == id);
+  const n = shopNames(S);
+
+  const rcName = document.getElementById('rc_shop_name'), rcUr = document.getElementById('rc_shop_ur');
+  rcName.textContent = n.en || n.ur || 'Dukan';
+  rcName.style.fontFamily = n.en ? '' : "'Noto Nastaliq Urdu',serif";
+  rcName.style.lineHeight = n.en ? '' : '1.8';
+  rcUr.textContent = (n.en && n.ur) ? n.ur : '';
+  rcUr.style.display = (n.en && n.ur) ? '' : 'none';
+
+  document.getElementById('rn').textContent = c.name;
+  document.getElementById('rc_phone').textContent = c.phone || 'N/A';
+  document.getElementById('rc_village').textContent = c.village || 'N/A';
+  document.getElementById('rc_date').textContent = new Date().toLocaleDateString('en-GB');
+  document.getElementById('rc_slip').textContent = 'KV-' + c.id + '-' + Math.floor(100 + Math.random() * 900);
+  document.getElementById('rb_sub').textContent = rs(c.khata_balance);
+  document.getElementById('rb').textContent = rs(c.khata_balance);
+
+  document.getElementById('rp').innerHTML = `
+    <div><strong>EasyPaisa:</strong> ${esc(S.easypaisa_no || 'N/A')} <span style="color:#64748b">(${esc(S.easypaisa_title || '')})</span></div>
+    <div><strong>JazzCash:</strong> ${esc(S.jazzcash_no || 'N/A')} <span style="color:#64748b">(${esc(S.jazzcash_title || '')})</span></div>
+  `;
+
+  try {
+    await document.fonts.ready;
+    const cv = await html2canvas(document.getElementById('rc'), { scale: 2, backgroundColor: '#ffffff' });
+
+    cv.toBlob(async (blob) => {
+      const fileName = 'Statement_' + c.name.replace(/\s+/g, '_') + '.png';
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      let ph = (c.phone || '').replace(/\D/g, '');
+      if (ph.startsWith('0')) ph = '92' + ph.slice(1);
+      const msg = `السلام علیکم ${c.name} صاحب،\n${n.ur || n.en || 'Dukan'} کی طرف سے یاد دہانی: آپ کا کل واجب الادا بیلنس ${Number(c.khata_balance).toLocaleString('en-PK')} روپے ہے۔\nتفصیلی سلپ ساتھ منسلک ہے۔ براہ کرم جلد ادا فرمائیں۔ شکریہ!`;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Udhaar Slip',
+            text: msg
+          });
+          toast('Parchi share ho gayi!');
+          return;
+        } catch (shareErr) {
+          console.log('Direct share canceled:', shareErr);
+        }
+      }
+
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          toast('Parchi copy ho gayi! WhatsApp par Ctrl+V karein');
+        } catch (clipErr) {
+          console.log('Clipboard copy error:', clipErr);
+        }
+      }
+
+      setTimeout(() => {
+        window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(msg), '_blank');
+      }, 500);
+
+    }, 'image/png');
+
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+  }
+}
+
+s.oninput = draw;
+load();
+</script>
+</body>
+</html>
