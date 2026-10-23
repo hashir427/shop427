@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Kisaan Khata - Dukan</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .history-card {
+      border-left: 4px solid #047857;
+      background: #f8fafc;
+      transition: all 0.2s ease;
+    }
+    .history-card.wasooli-entry {
+      border-left-color: #0284c7;
+      background: #f0f9ff;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #customerHistoryModal, #customerHistoryModal * { visibility: visible; }
+      #customerHistoryModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .modal-footer, .btn-close, .no-print-btn { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="container py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="flex-grow-1">
+      <input id="s" class="form-control" placeholder="Customer ya destination/city search karein...">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-em text-nowrap" data-bs-toggle="modal" data-bs-target="#newCustomerModal">
+        <i class="bi bi-person-plus-fill"></i> + Naya Customer
+      </button>
+      <button class="btn btn-outline-success text-nowrap" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <i class="bi bi-gear-fill"></i> Dukan Settings
+      </button>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Destination / City</th>
+            <th>Aakhri Khareedari (Date)</th>
+            <th class="text-end">Khata Balance</th>
+            <th class="text-end" style="min-width: 400px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="t"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Customer Ki Date-wise Tafseel & Khareedari Modal -->
+<div class="modal fade" id="customerHistoryModal" tabindex="-1" aria-labelledby="hist_modal_title" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h5 class="modal-title fw-bold" id="hist_modal_title">
+          <i class="bi bi-receipt-cutoff"></i> <span id="hist_cust_name">Customer</span> - Khareedari &amp; Khata Statement
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3">
+        <!-- Customer Top Summary Strip -->
+        <div class="card border-0 bg-light p-3 mb-3 border-start border-4 border-success shadow-sm">
+          <div class="row g-2 align-items-center">
+            <div class="col-md-7">
+              <h5 class="fw-bold text-success mb-1" id="hist_header_title">-</h5>
+              <div class="small text-muted" id="hist_sub_info">Phone: - | Destination: -</div>
+            </div>
+            <div class="col-md-5 text-md-end">
+              <span class="small text-muted d-block">Maujooda Baqaya Udhaar:</span>
+              <span class="fs-4 fw-bold text-danger" id="hist_balance_display">Rs 0</span>
+            </div>
+          </div>
+          <hr class="my-2">
+          <div class="d-flex justify-content-between small text-muted">
+            <span>Kul Kharidari (Total Bills): <strong class="text-dark" id="hist_total_purchases">Rs 0</strong></span>
+            <span>Kul Naqad Paid: <strong class="text-success" id="hist_total_paid">Rs 0</strong></span>
+          </div>
+        </div>
+
+        <!-- Date Wise Ledger Entries -->
+        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+          <i class="bi bi-calendar-check"></i> Date-Wise Khareedari Tafseel (Items &amp; Bills Record):
+        </h6>
+
+        <div id="customer_timeline_container"></div>
+      </div>
+
+      <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Band Karein</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-success btn-sm no-print-btn" id="btn_wa_hist" onclick="shareCustomerFullStatementWhatsApp()">
+            <i class="bi bi-whatsapp"></i> WhatsApp Statement (PNG Parchi)
+          </button>
+          <button type="button" class="btn btn-em btn-sm no-print-btn" onclick="window.print()">
+            <i class="bi bi-printer-fill"></i> Parchi Print Karein
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Naya Customer Modal -->
+<div class="modal fade" id="newCustomerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-person-plus"></i> Naya Customer Darj Karein</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Customer Ka Naam <span class="text-danger">*</span></label>
+          <input type="text" id="nc_name" class="form-control" placeholder="Maslan: Muhammad Akram">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Number</label>
+          <input type="text" id="nc_phone" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Destination / City / Ilaqa</label>
+          <input type="text" id="nc_village" class="form-control" placeholder="Maslan: Faisalabad, Lahore, Bhakkar">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Pehla Udhaar / Starting Balance</label>
+          <input type="number" id="nc_balance" class="form-control" value="0" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="addNewCustomer()"><i class="bi bi-check-circle"></i> Customer Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Edit Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> Customer Edit Karein</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ec_id">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Customer Ka Naam <span class="text-danger">*</span></label>
+          <input type="text" id="ec_name" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Mobile Number</label>
+          <input type="text" id="ec_phone" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Destination / City / Ilaqa</label>
+          <input type="text" id="ec_village" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Khata Balance (Baqaya Udhaar)</label>
+          <input type="number" id="ec_balance" class="form-control" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="updateCustomer()"><i class="bi bi-save"></i> Tabdeeli Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dukan Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-shop"></i> Dukan &amp; Payment Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Dukan Ka Naam</label>
+          <input id="st_name" class="form-control" placeholder="e.g. Kisan Veterinary Clinic &amp; Khal Store">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">EasyPaisa Mobile Number</label>
+          <input id="st_ep_no" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">EasyPaisa Account Title</label>
+          <input id="st_ep_title" class="form-control" placeholder="Account par darj naam">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">JazzCash Mobile Number</label>
+          <input id="st_jc_no" class="form-control" placeholder="03XXXXXXXXX">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">JazzCash Account Title</label>
+          <input id="st_jc_title" class="form-control" placeholder="Account par darj naam">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="saveSettings()"><i class="bi bi-save"></i> Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Detailed Udhaar Reminder Slip Template for PNG (Hidden) -->
+<div id="rc" style="position:fixed;left:-9999px;top:0;width:600px;background:#ffffff;border:2px solid #064e3b;font-family:'Inter',sans-serif;color:#1e293b;padding:0;box-sizing:border-box;">
+  <div style="background:#064e3b;color:#ffffff;padding:18px;text-align:center;">
+    <div id="rc_shop_name" style="font-size:22px;font-weight:700;"></div>
+    <div style="font-size:12px;opacity:0.9;margin-top:5px;border-top:1px solid rgba(255,255,255,0.2);padding-top:5px;font-weight:600;letter-spacing:0.5px;">
+      UDHAAR REMINDER &amp; STATEMENT SLIP
+    </div>
+  </div>
+
+  <div style="padding:18px;">
+    <table style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:12px;">
+      <tr>
+        <td style="padding:3px 0;"><strong>Customer Name:</strong> <span id="rn"></span></td>
+        <td style="padding:3px 0;text-align:right;"><strong>Date:</strong> <span id="rc_date"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:3px 0;"><strong>Phone:</strong> <span id="rc_phone"></span></td>
+        <td style="padding:3px 0;text-align:right;"><strong>Slip No:</strong> <span id="rc_slip"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:3px 0;" colspan="2"><strong>Destination / City:</strong> <span id="rc_village"></span></td>
+      </tr>
+    </table>
+
+    <table style="width:100%;font-size:11px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:14px;">
+      <thead>
+        <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;text-align:left;">
+          <th style="padding:6px 6px;border-right:1px solid #cbd5e1;width:75px;">Date</th>
+          <th style="padding:6px 6px;border-right:1px solid #cbd5e1;">Items (Naqad / Udhaar)</th>
+          <th style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;width:60px;">Bill</th>
+          <th style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;width:60px;">Paid</th>
+          <th style="padding:6px 6px;text-align:right;width:60px;">Udhaar</th>
+        </tr>
+      </thead>
+      <tbody id="rc_items_body"></tbody>
+    </table>
+
+    <table style="width:100%;font-size:12.5px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:14px;">
+      <tr style="background:#fef2f2;">
+        <td style="padding:10px;font-weight:700;color:#991b1b;">Total Payable Balance (Kul Baqaya Udhaar):</td>
+        <td style="padding:10px;text-align:right;font-size:18px;font-weight:800;color:#b91c1c;" id="rb">Rs 0</td>
+      </tr>
+    </table>
+
+    <div id="rc_payment_box" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:10px;font-size:12px;margin-bottom:12px;">
+      <div style="font-weight:700;color:#065f46;margin-bottom:6px;">Payment Account Details:</div>
+      <div id="rp"></div>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:#475569;border-top:1px dashed #cbd5e1;padding-top:8px;">
+      Barahe meharbani apna baqaya udhaar jald az jald ada karein. Shukriya!
+    </div>
+  </div>
+</div>
+
+<!-- 2. Detailed Full Statement Slip Template for PNG (Hidden) -->
+<div id="detailed_rc" style="position:fixed;left:-9999px;top:0;width:600px;background:#ffffff;border:2px solid #064e3b;font-family:'Inter',sans-serif;color:#1e293b;padding:0;box-sizing:border-box;">
+  <div style="background:#064e3b;color:#ffffff;padding:18px;text-align:center;">
+    <div id="drc_shop_name" style="font-size:22px;font-weight:700;"></div>
+    <div style="font-size:12px;opacity:0.9;margin-top:5px;border-top:1px solid rgba(255,255,255,0.2);padding-top:5px;font-weight:600;letter-spacing:0.5px;">
+      COMPLETE KHATA STATEMENT &amp; ITEM DETAILS
+    </div>
+  </div>
+
+  <div style="padding:18px;">
+    <table style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:12px;">
+      <tr>
+        <td style="padding:3px 0;"><strong>Customer Name:</strong> <span id="drc_cust_name"></span></td>
+        <td style="padding:3px 0;text-align:right;"><strong>Statement Date:</strong> <span id="drc_date"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:3px 0;"><strong>Phone:</strong> <span id="drc_phone"></span></td>
+        <td style="padding:3px 0;text-align:right;"><strong>Destination / City:</strong> <span id="drc_village"></span></td>
+      </tr>
+    </table>
+
+    <!-- Ledger Table with explicit Naqad/Udhaar tags -->
+    <table style="width:100%;font-size:11px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:14px;">
+      <thead>
+        <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;text-align:left;">
+          <th style="padding:6px 6px;border-right:1px solid #cbd5e1;width:75px;">Date</th>
+          <th style="padding:6px 6px;border-right:1px solid #cbd5e1;">Item Name &amp; Status</th>
+          <th style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;width:60px;">Bill</th>
+          <th style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;width:60px;">Paid</th>
+          <th style="padding:6px 6px;text-align:right;width:60px;">Udhaar</th>
+        </tr>
+      </thead>
+      <tbody id="drc_items_body"></tbody>
+    </table>
+
+    <table style="width:100%;font-size:12.5px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:14px;">
+      <tr style="background:#fef2f2;">
+        <td style="padding:10px;font-weight:700;color:#991b1b;">Total Payable Balance (Kul Baqaya Udhaar):</td>
+        <td style="padding:10px;text-align:right;font-size:18px;font-weight:800;color:#b91c1c;" id="drc_total_bal">Rs 0</td>
+      </tr>
+    </table>
+
+    <div id="drc_payment_box" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;padding:10px;font-size:12px;margin-bottom:12px;">
+      <div style="font-weight:700;color:#065f46;margin-bottom:6px;">Payment Account Details:</div>
+      <div id="drc_pay_details"></div>
+    </div>
+
+    <div style="text-align:center;font-size:12px;color:#475569;border-top:1px dashed #cbd5e1;padding-top:8px;">
+      Barahe meharbani upar di gayi tafseelat ke mutabiq raqam ada karein. Shukriya!
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+renderNav('khata.html');
+let C = [], S = {}, allSales = [], activeSelectedCustomer = null, activeCustomerSales = [];
+
+const histModalEl = document.getElementById('customerHistoryModal');
+if (histModalEl) {
+  histModalEl.addEventListener('hide.bs.modal', function () {
+    if (document.activeElement && histModalEl.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  });
+}
+
+function openWhatsAppDirect(phone) {
+  let ph = (phone || '').replace(/\D/g, '');
+  if (ph.startsWith('0')) ph = '92' + ph.slice(1);
+
+  const appUrl = `whatsapp://send?phone=${ph}`;
+  const webUrl = `https://wa.me/${ph}`;
+
+  window.location.href = appUrl;
+  setTimeout(() => {
+    window.open(webUrl, '_blank');
+  }, 1200);
+}
+
+// Generate colored status pill for items in PNG Slip
+function getItemModeBadgeHTML(mode) {
+  if (mode === 'cash') {
+    return `<span style="display:inline-block;background:#dcfce7;color:#15803d;border:1px solid #86efac;font-size:9.5px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:4px;">Naqad</span>`;
+  } else if (mode === 'udhaar') {
+    return `<span style="display:inline-block;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-size:9.5px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:4px;">Udhaar</span>`;
+  }
+  return '';
+}
+
+function generatePaymentHTML() {
+  const hasEP = !!(S.easypaisa_no && S.easypaisa_no.trim());
+  const hasJC = !!(S.jazzcash_no && S.jazzcash_no.trim());
+
+  if (!hasEP && !hasJC) return '';
+
+  const epLogo = `
+    <svg width="22" height="22" viewBox="0 0 40 40" style="vertical-align: middle; margin-right: 6px;">
+      <circle cx="20" cy="20" r="19" fill="#00c853"/>
+      <text x="20" y="26" font-size="18" font-family="'Inter', sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">e</text>
+    </svg>
+  `;
+
+  const jcLogo = `
+    <svg width="22" height="22" viewBox="0 0 40 40" style="vertical-align: middle; margin-right: 6px;">
+      <circle cx="20" cy="20" r="19" fill="#d50000"/>
+      <circle cx="20" cy="20" r="10" fill="#ffab00"/>
+    </svg>
+  `;
+
+  let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+  if (hasEP) {
+    html += `
+      <div style="display: flex; align-items: center; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #a7f3d0;">
+        ${epLogo}
+        <div>
+          <strong style="color: #065f46;">EasyPaisa:</strong> 
+          <span style="font-weight: 700; color: #0f172a;">${esc(S.easypaisa_no)}</span>
+          ${S.easypaisa_title ? `<span style="color: #64748b; font-size: 11px;"> (${esc(S.easypaisa_title)})</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  if (hasJC) {
+    html += `
+      <div style="display: flex; align-items: center; background: #ffffff; padding: 6px 10px; border-radius: 6px; border: 1px solid #fecaca;">
+        ${jcLogo}
+        <div>
+          <strong style="color: #991b1b;">JazzCash:</strong> 
+          <span style="font-weight: 700; color: #0f172a;">${esc(S.jazzcash_no)}</span>
+          ${S.jazzcash_title ? `<span style="color: #64748b; font-size: 11px;"> (${esc(S.jazzcash_title)})</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  return html;
+}
+
+function populateSettings() {
+  document.getElementById('st_name').value = S.shop_name || '';
+  document.getElementById('st_ep_no').value = S.easypaisa_no || '';
+  document.getElementById('st_ep_title').value = S.easypaisa_title || '';
+  document.getElementById('st_jc_no').value = S.jazzcash_no || '';
+  document.getElementById('st_jc_title').value = S.jazzcash_title || '';
+}
+
+async function load() {
+  try {
+    await requireLogin();
+    S = await getSettings();
+    populateSettings();
+    applyShop(S);
+
+    const [custs, sales] = await Promise.all([
+      ok(db.from('kisan_vet_customers').select('*').order('khata_balance', { ascending: false })),
+      ok(db.from('kisan_vet_sales').select('*').order('created_at', { ascending: false }))
+    ]);
+
+    C = custs || [];
+    allSales = sales || [];
+
+    C.forEach(cust => {
+      const last = allSales.find(s => 
+        (s.customer_id && s.customer_id === cust.id) || 
+        (s.customer_name && s.customer_name.trim().toLowerCase() === cust.name.trim().toLowerCase()) ||
+        (cust.phone && s.customer_name && s.customer_name.includes(cust.phone))
+      );
+      cust.last_purchase_date = last ? last.created_at : (cust.created_at || null);
+    });
+
+    draw();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+function openCustomerHistory(id) {
+  const cust = C.find(x => x.id == id);
+  if (!cust) return;
+
+  activeSelectedCustomer = cust;
+  activeCustomerSales = allSales.filter(s => 
+    (s.customer_id && s.customer_id === cust.id) || 
+    (s.customer_name && s.customer_name.trim().toLowerCase() === cust.name.trim().toLowerCase())
+  );
+
+  document.getElementById('hist_cust_name').textContent = cust.name;
+  document.getElementById('hist_header_title').textContent = cust.name;
+  document.getElementById('hist_sub_info').textContent = `Mobile: ${cust.phone || '-'} | Destination: ${cust.village || '-'}`;
+  document.getElementById('hist_balance_display').textContent = rs(cust.khata_balance);
+
+  let totalPurchases = 0, totalPaid = 0;
+  activeCustomerSales.forEach(s => {
+    totalPurchases += Number(s.total_amount || 0);
+    totalPaid += Number(s.cash_paid || 0);
+  });
+  document.getElementById('hist_total_purchases').textContent = rs(totalPurchases);
+  document.getElementById('hist_total_paid').textContent = rs(totalPaid);
+
+  const container = document.getElementById('customer_timeline_container');
+  if (!activeCustomerSales.length) {
+    container.innerHTML = `
+      <div class="alert alert-secondary text-center py-4">
+        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+        Is customer ki detail billing entry nahi mili.<br>
+        <strong>Purana Starting Udhaar Balance:</strong> ${rs(cust.khata_balance)}
+      </div>
+    `;
+  } else {
+    container.innerHTML = activeCustomerSales.map((s) => {
+      const d = new Date(s.created_at);
+      const formattedDate = d.toLocaleDateString('en-GB') + ' (' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ')';
+      const isWasooli = (s.items || []).some(i => i.name && i.name.includes('Udhaar Wasooli'));
+
+      const itemsRows = (s.items || []).map(item => `
+        <tr class="small">
+          <td class="fw-semibold text-dark">
+            ${esc(item.name)}
+            ${item.mode === 'cash' ? '<span class="badge bg-success-subtle text-success border border-success-subtle ms-1">Naqad</span>' : ''}
+            ${item.mode === 'udhaar' ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Udhaar</span>' : ''}
+          </td>
+          <td class="text-center">${item.qty} ${esc(item.unit || '')}</td>
+          <td class="text-end">${rs(item.price)}</td>
+          <td class="text-end fw-bold">${rs(item.total || (item.price * item.qty))}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="card p-3 mb-3 shadow-sm history-card ${isWasooli ? 'wasooli-entry' : ''}">
+          <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+            <div>
+              <span class="badge ${isWasooli ? 'bg-info text-dark' : 'bg-success'} me-2">
+                ${isWasooli ? 'Wasooli / Jama' : 'Khareedari Bill'}
+              </span>
+              <strong class="text-dark"><i class="bi bi-clock-history"></i> Tareekh: ${formattedDate}</strong>
+            </div>
+            <div class="fw-bold fs-6 text-end">
+              Total: ${rs(s.total_amount)}
+            </div>
+          </div>
+
+          <div class="table-responsive mb-2">
+            <table class="table table-sm table-bordered bg-white mb-0">
+              <thead class="table-light small">
+                <tr>
+                  <th>Khareedi Gayi Item (Dawai / Feed)</th>
+                  <th class="text-center" style="width: 80px;">Tadad (Qty)</th>
+                  <th class="text-end" style="width: 100px;">Rate</th>
+                  <th class="text-end" style="width: 110px;">Kul Raqam</th>
+                </tr>
+              </thead>
+              <tbody>${itemsRows}</tbody>
+            </table>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center small pt-1 bg-white px-2 py-1 rounded border">
+            <span class="text-success fw-bold"><i class="bi bi-cash"></i> Naqad Diya: ${rs(s.cash_paid)}</span>
+            <span class="${s.udhaar_amount > 0 ? 'text-danger fw-bold' : 'text-muted'}">
+              <i class="bi bi-journal-bookmark"></i> Is Bill Ka Udhaar: ${s.udhaar_amount > 0 ? rs(s.udhaar_amount) : 'Rs 0'}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const modalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('customerHistoryModal'));
+  modalInstance.show();
+}
+
+// 1. Detailed Full Statement (Modal Se Bhejne Wali Parchi - Har Item Ka Naqad / Udhaar Wazeh Tag)
+async function shareCustomerFullStatementWhatsApp() {
+  if (!activeSelectedCustomer) return;
+  const c = activeSelectedCustomer;
+  const n = shopNames(S);
+  const btn = document.getElementById('btn_wa_hist');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> PNG Parchi Ban Rahi Hai...';
+
+  document.getElementById('drc_shop_name').textContent = n.en || n.ur || 'Dukan';
+  document.getElementById('drc_cust_name').textContent = c.name;
+  document.getElementById('drc_phone').textContent = c.phone || 'N/A';
+  document.getElementById('drc_village').textContent = c.village || 'N/A';
+  document.getElementById('drc_date').textContent = new Date().toLocaleDateString('en-GB');
+  document.getElementById('drc_total_bal').textContent = rs(c.khata_balance);
+
+  const payHtml = generatePaymentHTML();
+  const payBox = document.getElementById('drc_payment_box');
+  if (payHtml) {
+    payBox.style.display = 'block';
+    document.getElementById('drc_pay_details').innerHTML = payHtml;
+  } else {
+    payBox.style.display = 'none';
+  }
+
+  const tbody = document.getElementById('drc_items_body');
+  if (!activeCustomerSales.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td style="padding:8px;" colspan="5" class="text-center text-muted">
+          Pichla Khata Starting Udhaar Balance: <strong>${rs(c.khata_balance)}</strong>
+        </td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = activeCustomerSales.slice(0, 10).map(s => {
+      const d = new Date(s.created_at).toLocaleDateString('en-GB');
+      
+      // Har item ke aage Naqad ya Udhaar ka clean colored tag
+      const itemsDetailHTML = (s.items || []).map(i => `
+        <div style="margin-bottom: 3px; line-height: 1.4;">
+          <strong>${esc(i.name)}</strong> (${i.qty})
+          ${getItemModeBadgeHTML(i.mode)}
+        </div>
+      `).join('');
+
+      return `
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:6px 6px;border-right:1px solid #cbd5e1;vertical-align:top;">${d}</td>
+          <td style="padding:6px 6px;border-right:1px solid #cbd5e1;vertical-align:top;">${itemsDetailHTML || 'Purchases'}</td>
+          <td style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;vertical-align:top;font-weight:600;">${rs(s.total_amount)}</td>
+          <td style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;vertical-align:top;color:#15803d;font-weight:700;">${rs(s.cash_paid)}</td>
+          <td style="padding:6px 6px;text-align:right;vertical-align:top;color:#b91c1c;font-weight:700;">${rs(s.udhaar_amount)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  try {
+    await document.fonts.ready;
+    const cv = await html2canvas(document.getElementById('detailed_rc'), { scale: 2, backgroundColor: '#ffffff' });
+
+    cv.toBlob(async (blob) => {
+      const fileName = 'Khata_Statement_' + c.name.replace(/\s+/g, '_') + '.png';
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file]
+          });
+          toast('Parchi image WhatsApp par share ho gayi!');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-whatsapp"></i> WhatsApp Statement (PNG Parchi)';
+          return;
+        } catch (shareErr) {
+          console.log('Direct share canceled:', shareErr);
+        }
+      }
+
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          toast('Parchi copy ho gayi! WhatsApp khul raha hai, wahan Ctrl+V karein');
+        } catch (clipErr) {
+          console.log('Clipboard error:', clipErr);
+        }
+      }
+
+      setTimeout(() => {
+        openWhatsAppDirect(c.phone);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-whatsapp"></i> WhatsApp Statement (PNG Parchi)';
+      }, 500);
+
+    }, 'image/png');
+
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-whatsapp"></i> WhatsApp Statement (PNG Parchi)';
+  }
+}
+
+// 2. Main Table Se "Form Parchi" Send Karna (Detailed Udhaar Reminder)
+async function wa(id) {
+  const c = C.find(x => x.id == id);
+  if (!c) return;
+
+  const n = shopNames(S);
+  const custSales = allSales.filter(s => 
+    (s.customer_id && s.customer_id === c.id) || 
+    (s.customer_name && s.customer_name.trim().toLowerCase() === c.name.trim().toLowerCase())
+  );
+
+  document.getElementById('rc_shop_name').textContent = n.en || n.ur || 'Dukan';
+  document.getElementById('rn').textContent = c.name;
+  document.getElementById('rc_phone').textContent = c.phone || 'N/A';
+  document.getElementById('rc_village').textContent = c.village || 'N/A';
+  document.getElementById('rc_date').textContent = new Date().toLocaleDateString('en-GB');
+  document.getElementById('rc_slip').textContent = 'KV-' + c.id + '-' + Math.floor(100 + Math.random() * 900);
+  document.getElementById('rb').textContent = rs(c.khata_balance);
+
+  const payHtml = generatePaymentHTML();
+  const payBox = document.getElementById('rc_payment_box');
+  if (payHtml) {
+    payBox.style.display = 'block';
+    document.getElementById('rp').innerHTML = payHtml;
+  } else {
+    payBox.style.display = 'none';
+  }
+
+  const tbody = document.getElementById('rc_items_body');
+  if (!custSales.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td style="padding:8px;" colspan="5" class="text-center text-muted">
+          Pichla Khata Starting Udhaar Balance: <strong>${rs(c.khata_balance)}</strong>
+        </td>
+      </tr>
+    `;
+  } else {
+    tbody.innerHTML = custSales.slice(0, 6).map(s => {
+      const d = new Date(s.created_at).toLocaleDateString('en-GB');
+      const itemsDetailHTML = (s.items || []).map(i => `
+        <div style="margin-bottom: 2px;">
+          ${esc(i.name)} (${i.qty})
+          ${getItemModeBadgeHTML(i.mode)}
+        </div>
+      `).join('');
+
+      return `
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:6px 6px;border-right:1px solid #cbd5e1;vertical-align:top;">${d}</td>
+          <td style="padding:6px 6px;border-right:1px solid #cbd5e1;vertical-align:top;">${itemsDetailHTML || 'Purchases'}</td>
+          <td style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;vertical-align:top;font-weight:600;">${rs(s.total_amount)}</td>
+          <td style="padding:6px 6px;text-align:right;border-right:1px solid #cbd5e1;vertical-align:top;color:#15803d;font-weight:700;">${rs(s.cash_paid)}</td>
+          <td style="padding:6px 6px;text-align:right;vertical-align:top;color:#b91c1c;font-weight:700;">${rs(s.udhaar_amount)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  try {
+    await document.fonts.ready;
+    const cv = await html2canvas(document.getElementById('rc'), { scale: 2, backgroundColor: '#ffffff' });
+
+    cv.toBlob(async (blob) => {
+      const fileName = 'Udhaar_Slip_' + c.name.replace(/\s+/g, '_') + '.png';
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file]
+          });
+          toast('Parchi share ho gayi!');
+          return;
+        } catch (shareErr) {
+          console.log('Direct share canceled:', shareErr);
+        }
+      }
+
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          toast('Parchi copy ho gayi! WhatsApp par Ctrl+V karein');
+        } catch (clipErr) {
+          console.log('Clipboard copy error:', clipErr);
+        }
+      }
+
+      setTimeout(() => {
+        openWhatsAppDirect(c.phone);
+      }, 500);
+
+    }, 'image/png');
+
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+  }
+}
+
+async function addNewCustomer() {
+  const name = document.getElementById('nc_name').value.trim();
+  const phone = document.getElementById('nc_phone').value.trim();
+  const village = document.getElementById('nc_village').value.trim();
+  const balance = parseFloat(document.getElementById('nc_balance').value) || 0;
+
+  if (!name) return toast('Customer ka naam likhna zaroori hai', false);
+
+  try {
+    await ok(db.from('kisan_vet_customers').insert([{
+      name: name,
+      phone: phone,
+      village: village,
+      khata_balance: balance
+    }]));
+
+    toast('Naya customer kamyabi se darj ho gaya!');
+    document.getElementById('nc_name').value = '';
+    document.getElementById('nc_phone').value = '';
+    document.getElementById('nc_village').value = '';
+    document.getElementById('nc_balance').value = '0';
+
+    const modalEl = document.getElementById('newCustomerModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    await load();
+  } catch (e) {
+    toast('Customer save nahi ho saka: ' + e.message, false);
+  }
+}
+
+function openEditCustomer(id) {
+  const c = C.find(x => x.id == id);
+  if (!c) return;
+
+  document.getElementById('ec_id').value = c.id;
+  document.getElementById('ec_name').value = c.name || '';
+  document.getElementById('ec_phone').value = c.phone || '';
+  document.getElementById('ec_village').value = c.village || '';
+  document.getElementById('ec_balance').value = c.khata_balance || 0;
+
+  const modalEl = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+  modalEl.show();
+}
+
+async function updateCustomer() {
+  const id = document.getElementById('ec_id').value;
+  const name = document.getElementById('ec_name').value.trim();
+  const phone = document.getElementById('ec_phone').value.trim();
+  const village = document.getElementById('ec_village').value.trim();
+  const balance = parseFloat(document.getElementById('ec_balance').value) || 0;
+
+  if (!name) return toast('Customer ka naam khali nahi ho sakta', false);
+
+  try {
+    await ok(db.from('kisan_vet_customers').update({
+      name: name,
+      phone: phone,
+      village: village,
+      khata_balance: balance
+    }).eq('id', id));
+
+    toast('Customer detail kamyabi se update ho gayi!');
+    const modalEl = document.getElementById('editCustomerModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    await load();
+  } catch (e) {
+    toast('Update error: ' + e.message, false);
+  }
+}
+
+async function saveSettings() {
+  const payload = {
+    shop_name: document.getElementById('st_name').value.trim(),
+    easypaisa_no: document.getElementById('st_ep_no').value.trim(),
+    easypaisa_title: document.getElementById('st_ep_title').value.trim(),
+    jazzcash_no: document.getElementById('st_jc_no').value.trim(),
+    jazzcash_title: document.getElementById('st_jc_title').value.trim()
+  };
+  if (!payload.shop_name) {
+    return toast('Dukan ka naam likhein', false);
+  }
+
+  try {
+    if (S && S.id) {
+      await ok(db.from('kisan_vet_settings').update(payload).eq('id', S.id));
+    } else {
+      await ok(db.from('kisan_vet_settings').insert([payload]));
+    }
+    toast('Settings kamyabi se save ho gayin!');
+    const modalEl = document.getElementById('settingsModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+    await load();
+  } catch (e) {
+    toast('Settings save nahi huin: ' + e.message, false);
+  }
+}
+
+function draw() {
+  const q = s.value.toLowerCase();
+  t.innerHTML = C.filter(c => (c.name + ' ' + (c.phone || '') + ' ' + (c.village || '')).toLowerCase().includes(q)).map(c => {
+    let dateDisplay = '<span class="badge bg-light text-muted border">Starting Balance</span>';
+    if (c.last_purchase_date) {
+      const d = new Date(c.last_purchase_date);
+      dateDisplay = `
+        <span class="badge bg-light text-dark border">
+          <i class="bi bi-calendar3"></i> ${d.toLocaleDateString('en-GB')}
+        </span>
+        <div class="small text-muted">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      `;
+    }
+
+    return `
+      <tr>
+        <td class="fw-semibold">
+          <div class="text-dark">${esc(c.name)}</div>
+        </td>
+        <td>${esc(c.phone || '-')}</td>
+        <td><span class="badge bg-light text-dark border">${esc(c.village || '-')}</span></td>
+        <td>${dateDisplay}</td>
+        <td class="text-end fw-bold ${c.khata_balance > 0 ? 'text-danger fs-6' : 'text-success'}">${rs(c.khata_balance)}</td>
+        <td class="text-nowrap text-end">
+          <button class="btn btn-sm btn-outline-info text-dark" onclick="openCustomerHistory(${c.id})" title="Is customer ki tamam tareekh-wise khareedari dekhein">
+            <i class="bi bi-receipt"></i> Tafseel
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="openEditCustomer(${c.id})"><i class="bi bi-pencil"></i> Edit</button>
+          <button class="btn btn-sm btn-em" onclick="pay(${c.id})"><i class="bi bi-cash-coin"></i> Wasooli</button>
+          <button class="btn btn-sm btn-success" onclick="wa(${c.id})"><i class="bi bi-whatsapp"></i> Form Parchi</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="delCustomer(${c.id})"><i class="bi bi-trash"></i> Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Koi customer nahi mila</td></tr>';
+}
+
+async function pay(id) {
+  const c = C.find(x => x.id == id);
+  const a = parseFloat(prompt('Wasooli ki raqam (Rs) - ' + c.name + '\nBaqi: ' + rs(c.khata_balance)));
+  if (!a || a <= 0) return;
+  if (a > c.khata_balance && !confirm('Raqam baqi se zyada hai. Balance 0 kar dein?')) return;
+  try {
+    await ok(db.from('kisan_vet_customers').update({ khata_balance: Math.max(+c.khata_balance - a, 0) }).eq('id', id));
+
+    await ok(db.from('kisan_vet_sales').insert({
+      customer_id: id,
+      customer_name: c.name,
+      total_amount: a,
+      cash_paid: a,
+      udhaar_amount: 0,
+      items: [{ name: 'Udhaar Wasooli / Jama', qty: 1, price: a, total: a }]
+    }));
+
+    toast('Wasooli jama ho gayi: ' + rs(a));
+    load();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+async function delCustomer(id) {
+  const c = C.find(x => x.id == id);
+  if (!confirm(`Kya aap waqai ${c.name} ka record mukammal delete karna chahte hain?`)) return;
+  try {
+    await ok(db.from('kisan_vet_customers').delete().eq('id', id));
+    toast('Customer record delete ho gaya');
+    load();
+  } catch (e) {
+    toast('Delete error: ' + e.message, false);
+  }
+}
+
+s.oninput = draw;
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Stock Purchase Orders - Kisan Vet</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    .dropdown-menu-searchable {
+      max-height: 280px;
+      overflow-y: auto;
+      width: 100%;
+    }
+    .product-select-btn {
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+<div class="container py-3">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h4 class="fw-bold mb-0 text-success"><i class="bi bi-truck"></i> Stock Purchase &amp; Demand Orders</h4>
+    <button class="btn btn-em" data-bs-toggle="modal" data-bs-target="#newOrderModal">
+      <i class="bi bi-plus-circle"></i> + Naya Stock Order Likhein
+    </button>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+      <span>Tamam Stock Demand Orders</span>
+      <span class="small text-muted" id="orders_count">0 Orders</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Order No / Date</th>
+            <th>Dealer / Supplier</th>
+            <th>Items List</th>
+            <th>Status</th>
+            <th class="text-end" style="min-width: 250px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="orders_table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Naya Stock Order Banana -->
+<div class="modal fade" id="newOrderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-cart-plus"></i> Naya Stock Demand Order Likhein</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Dealer / Company / Supplier Name</label>
+            <input type="text" id="ord_supplier" class="form-control" placeholder="Maslan: Al-Noor Pharma / Feed Mills">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Dealer WhatsApp No</label>
+            <input type="text" id="ord_phone" class="form-control" placeholder="03XXXXXXXXX">
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-success border-bottom pb-1"><i class="bi bi-box-seam"></i> Item Search Karein Aur Quantity Likhein</h6>
+        
+        <div class="row g-2 align-items-end mb-3 bg-light p-2 rounded border">
+          <!-- Searchable Dropdown Component -->
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Item Chunein Ya Search Karein</label>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary form-control product-select-btn" type="button" id="productDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                <span id="selected_product_label" class="text-truncate">-- Medicine ya Feed Chunein --</span>
+                <i class="bi bi-chevron-down ms-2"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-searchable p-2 shadow" aria-labelledby="productDropdownBtn" id="productDropdownMenu">
+                <div class="input-group input-group-sm mb-2">
+                  <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                  <input type="text" class="form-control" id="dropdown_search_input" placeholder="Dawai ya feed search karein..." oninput="filterDropdownItems(this.value)">
+                </div>
+                <div id="dropdown_items_list"></div>
+              </div>
+            </div>
+            <input type="hidden" id="selected_prod_id">
+            <div id="stock_hint" class="small text-muted mt-1" style="min-height: 18px;"></div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Matlooba Quantity (Order Qty)</label>
+            <div class="input-group">
+              <input type="number" id="inp_qty" min="0.1" step="any" class="form-control" placeholder="Qty">
+              <span class="input-group-text" id="lbl_unit">pcs</span>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-em w-100" onclick="addItemToOrderList()">
+              <i class="bi bi-plus-lg"></i> Shamil Karein
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+          <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Item Ka Naam</th>
+                <th>Category</th>
+                <th style="width: 120px;">Order Qty</th>
+                <th style="width: 50px;"></th>
+              </tr>
+            </thead>
+            <tbody id="temp_items_table">
+              <tr><td colspan="4" class="text-center text-muted">Koi item add nahi kiya gaya</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Band Karein</button>
+        <button type="button" class="btn btn-em" onclick="savePurchaseOrder()">
+          <i class="bi bi-save"></i> Order Save Karein
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Demand Slip PNG Template (Hidden) -->
+<div id="demand_slip" style="position:fixed;left:-9999px;top:0;width:550px;background:#ffffff;border:2px solid #064e3b;font-family:'Inter',sans-serif;color:#1e293b;padding:0;box-sizing:border-box;">
+  <div style="background:#064e3b;color:#ffffff;padding:20px;text-align:center;">
+    <div id="ds_shop_name" style="font-size:22px;font-weight:700;letter-spacing:0.5px;"></div>
+    <div id="ds_shop_ur" style="font-family:'Noto Nastaliq Urdu',serif;font-size:16px;margin-top:4px;"></div>
+    <div style="font-size:13px;opacity:0.9;margin-top:6px;border-top:1px solid rgba(255,255,255,0.2);padding-top:6px;font-weight:600;">STOCK DEMAND / PURCHASE ORDER</div>
+  </div>
+
+  <div style="padding:22px;">
+    <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:18px;">
+      <tr>
+        <td style="padding:4px 0;"><strong>To Dealer / Supplier:</strong> <span id="ds_supplier"></span></td>
+        <td style="padding:4px 0;text-align:right;"><strong>Date:</strong> <span id="ds_date"></span></td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;"><strong>Dealer Phone:</strong> <span id="ds_phone"></span></td>
+        <td style="padding:4px 0;text-align:right;"><strong>Order Slip No:</strong> <span id="ds_slip_no"></span></td>
+      </tr>
+    </table>
+
+    <table style="width:100%;font-size:13px;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:18px;">
+      <thead>
+        <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;text-align:left;">
+          <th style="padding:8px 10px;border-right:1px solid #cbd5e1;">Sr.</th>
+          <th style="padding:8px 10px;border-right:1px solid #cbd5e1;">Item Name (Medicine / Feed)</th>
+          <th style="padding:8px 10px;border-right:1px solid #cbd5e1;">Type</th>
+          <th style="padding:8px 10px;text-align:center;">Required Qty</th>
+        </tr>
+      </thead>
+      <tbody id="ds_items_body"></tbody>
+    </table>
+
+    <div style="background:#f8fafc;border:1px dashed #064e3b;border-radius:6px;padding:12px;font-size:13px;text-align:center;">
+      <strong>Note:</strong> Barahe meharbani yeh stock jald az jald hamari dukan par deliver karwayein. Shukriya!
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+renderNav('orders.html');
+
+let allProducts = [], allOrders = [], tempItems = [], S = {};
+
+async function load() {
+  try {
+    await requireLogin();
+    S = await getSettings();
+    applyShop(S);
+
+    const [products, orders] = await Promise.all([
+      ok(db.from('kisan_vet_products').select('*').order('name')),
+      ok(db.from('kisan_vet_purchase_orders').select('*').order('created_at', { ascending: false }))
+    ]);
+
+    allProducts = products || [];
+    allOrders = orders || [];
+
+    renderCustomDropdownItems(allProducts);
+    renderOrdersTable();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+// Searchable Dropdown Functions
+function renderCustomDropdownItems(list) {
+  const container = document.getElementById('dropdown_items_list');
+  if (!list.length) {
+    container.innerHTML = '<div class="text-muted small p-2 text-center">Koi item nahi mila</div>';
+    return;
+  }
+  container.innerHTML = list.map(p => `
+    <button type="button" class="dropdown-item py-2 border-bottom" onclick="selectProductFromDropdown(${p.id})">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong class="d-block text-dark">${esc(p.name)}</strong>
+          <span class="badge ${p.category === 'Medicine' ? 'bg-info text-dark' : 'bg-warning text-dark'}">${p.category}</span>
+        </div>
+        <div class="text-end small">
+          <span class="${p.stock_qty <= p.min_limit ? 'text-danger fw-bold' : 'text-muted'}">Stock: ${p.stock_qty} ${esc(p.unit)}</span>
+        </div>
+      </div>
+    </button>
+  `).join('');
+}
+
+function filterDropdownItems(query) {
+  const q = (query || '').toLowerCase();
+  const filtered = allProducts.filter(p => 
+    p.name.toLowerCase().includes(q) || 
+    p.category.toLowerCase().includes(q)
+  );
+  renderCustomDropdownItems(filtered);
+}
+
+function selectProductFromDropdown(id) {
+  const p = allProducts.find(x => x.id == id);
+  if (!p) return;
+
+  document.getElementById('selected_prod_id').value = p.id;
+  document.getElementById('selected_product_label').innerHTML = `<strong>${esc(p.name)}</strong> (${esc(p.category)})`;
+  document.getElementById('lbl_unit').textContent = p.unit || 'pcs';
+  
+  const hint = document.getElementById('stock_hint');
+  hint.innerHTML = `Maujooda Stock: <strong class="${p.stock_qty <= p.min_limit ? 'text-danger' : 'text-success'}">${p.stock_qty} ${p.unit}</strong>`;
+
+  // Close dropdown menu
+  const btn = document.getElementById('productDropdownBtn');
+  const dropdownInstance = bootstrap.Dropdown.getInstance(btn);
+  if (dropdownInstance) dropdownInstance.hide();
+
+  document.getElementById('inp_qty').focus();
+}
+
+function addItemToOrderList() {
+  const prodId = document.getElementById('selected_prod_id').value;
+  const qty = parseFloat(document.getElementById('inp_qty').value);
+
+  if (!prodId) return toast('Pehle dropdown se item select karein', false);
+  if (!qty || qty <= 0) return toast('Quantity 0 se zyada honi chahiye', false);
+
+  const p = allProducts.find(x => x.id == prodId);
+  const existing = tempItems.find(x => x.id == prodId);
+
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    tempItems.push({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      unit: p.unit,
+      qty: qty
+    });
+  }
+
+  drawTempItems();
+  resetProductSelection();
+}
+
+function resetProductSelection() {
+  document.getElementById('selected_prod_id').value = '';
+  document.getElementById('selected_product_label').textContent = '-- Medicine ya Feed Chunein --';
+  document.getElementById('inp_qty').value = '';
+  document.getElementById('lbl_unit').textContent = 'pcs';
+  document.getElementById('stock_hint').textContent = '';
+  document.getElementById('dropdown_search_input').value = '';
+  renderCustomDropdownItems(allProducts);
+}
+
+function removeTempItem(idx) {
+  tempItems.splice(idx, 1);
+  drawTempItems();
+}
+
+function drawTempItems() {
+  const tbody = document.getElementById('temp_items_table');
+  if (!tempItems.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Koi item add nahi kiya gaya</td></tr>';
+    return;
+  }
+  tbody.innerHTML = tempItems.map((item, i) => `
+    <tr>
+      <td class="fw-semibold">${esc(item.name)}</td>
+      <td><span class="badge ${item.category == 'Medicine' ? 'bg-info text-dark' : 'bg-warning text-dark'}">${item.category}</span></td>
+      <td><strong>${item.qty}</strong> <small class="text-muted">${esc(item.unit)}</small></td>
+      <td class="text-center"><button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeTempItem(${i})"><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+  `).join('');
+}
+
+async function savePurchaseOrder() {
+  const supplier = document.getElementById('ord_supplier').value.trim();
+  const phone = document.getElementById('ord_phone').value.trim();
+
+  if (!supplier) return toast('Dealer ya Supplier ka naam likhein', false);
+  if (!tempItems.length) return toast('Kam az kam ek item add karein', false);
+
+  try {
+    await ok(db.from('kisan_vet_purchase_orders').insert([{
+      supplier_name: supplier,
+      supplier_phone: phone,
+      items: tempItems,
+      status: 'Pending'
+    }]));
+
+    toast('Order Demand save ho gayi!');
+    tempItems = [];
+    document.getElementById('ord_supplier').value = '';
+    document.getElementById('ord_phone').value = '';
+    resetProductSelection();
+    drawTempItems();
+
+    const m = bootstrap.Modal.getInstance(document.getElementById('newOrderModal'));
+    if (m) m.hide();
+
+    await load();
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+  }
+}
+
+function renderOrdersTable() {
+  document.getElementById('orders_count').textContent = allOrders.length + ' Orders';
+  const tbody = document.getElementById('orders_table');
+
+  tbody.innerHTML = allOrders.map((ord, idx) => {
+    const d = new Date(ord.created_at);
+    const dateStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const itemsSummary = (ord.items || []).map(i => `${esc(i.name)}: <strong>${i.qty} ${esc(i.unit)}</strong>`).join(', ');
+
+    return `
+      <tr class="${ord.status === 'Received' ? 'table-light text-muted' : ''}">
+        <td>
+          <div class="fw-bold">ORD-#${ord.id}</div>
+          <small class="text-muted">${dateStr}</small>
+        </td>
+        <td>
+          <div class="fw-semibold">${esc(ord.supplier_name || '-')}</div>
+          <small class="text-muted">${esc(ord.supplier_phone || '-')}</small>
+        </td>
+        <td class="small" style="max-width: 320px;">${itemsSummary || '-'}</td>
+        <td>
+          <span class="badge ${ord.status === 'Received' ? 'bg-success' : 'bg-warning text-dark'}">
+            ${ord.status === 'Received' ? '<i class="bi bi-check-all"></i> Received' : '<i class="bi bi-clock-history"></i> Pending'}
+          </span>
+        </td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-sm btn-success" onclick="shareOrderViaWhatsApp(${idx})" title="Dealer ko WhatsApp Parchi bhejein">
+            <i class="bi bi-whatsapp"></i> Parchi
+          </button>
+          
+          ${ord.status === 'Pending' ? `
+            <button class="btn btn-sm btn-em" onclick="confirmOrderReceived(${ord.id})" title="Maal dukan par aa gaya, stock mein shamil karein">
+              <i class="bi bi-box-arrow-in-down"></i> Confirm Maal Aa Gaya
+            </button>
+          ` : ''}
+
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteOrder(${ord.id})" title="Order Delete Karein">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">Koi order record nahi mila</td></tr>';
+}
+
+async function confirmOrderReceived(orderId) {
+  const ord = allOrders.find(x => x.id == orderId);
+  if (!ord) return;
+
+  if (!confirm(`Kya ${ord.supplier_name} se yeh maal pohanch chuka hai?\n"OK" karne par tamam items ka stock automatically database mein add ho jayega.`)) {
+    return;
+  }
+
+  try {
+    for (const item of (ord.items || [])) {
+      const prod = allProducts.find(p => p.id == item.id);
+      if (prod) {
+        const newQty = Number(prod.stock_qty || 0) + Number(item.qty || 0);
+        await ok(db.from('kisan_vet_products').update({ stock_qty: newQty }).eq('id', prod.id));
+      }
+    }
+
+    await ok(db.from('kisan_vet_purchase_orders').update({ status: 'Received' }).eq('id', orderId));
+
+    toast('Stock kamyabi se barh gaya aur order Received ho gaya!');
+    await load();
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+  }
+}
+
+async function deleteOrder(orderId) {
+  if (!confirm('Kya aap waqai yeh order delete karna chahte hain?')) return;
+  try {
+    await ok(db.from('kisan_vet_purchase_orders').delete().eq('id', orderId));
+    toast('Order delete ho gaya');
+    await load();
+  } catch (e) {
+    toast('Delete error: ' + e.message, false);
+  }
+}
+
+async function shareOrderViaWhatsApp(idx) {
+  const ord = allOrders[idx];
+  if (!ord) return;
+
+  const n = shopNames(S);
+  document.getElementById('ds_shop_name').textContent = n.en || n.ur || 'Dukan Portal';
+  document.getElementById('ds_shop_ur').textContent = (n.en && n.ur) ? n.ur : '';
+  
+  document.getElementById('ds_supplier').textContent = ord.supplier_name || 'Dealer / Company';
+  document.getElementById('ds_phone').textContent = ord.supplier_phone || 'N/A';
+  document.getElementById('ds_date').textContent = new Date(ord.created_at).toLocaleDateString('en-GB');
+  document.getElementById('ds_slip_no').textContent = 'PO-' + ord.id;
+
+  const tbody = document.getElementById('ds_items_body');
+  tbody.innerHTML = (ord.items || []).map((item, i) => `
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:8px 10px;border-right:1px solid #cbd5e1;">${i + 1}</td>
+      <td style="padding:8px 10px;border-right:1px solid #cbd5e1;font-weight:600;">${esc(item.name)}</td>
+      <td style="padding:8px 10px;border-right:1px solid #cbd5e1;">${esc(item.category)}</td>
+      <td style="padding:8px 10px;text-align:center;font-weight:700;color:#064e3b;font-size:14px;">
+        ${item.qty} ${esc(item.unit)}
+      </td>
+    </tr>
+  `).join('');
+
+  try {
+    await document.fonts.ready;
+    const cv = await html2canvas(document.getElementById('demand_slip'), { scale: 2, backgroundColor: '#ffffff' });
+
+    cv.toBlob(async (blob) => {
+      const fileName = 'Demand_Order_PO_' + ord.id + '.png';
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      let ph = (ord.supplier_phone || '').replace(/\D/g, '');
+      if (ph.startsWith('0')) ph = '92' + ph.slice(1);
+
+      const itemsText = (ord.items || []).map((it, i) => `${i + 1}. ${it.name} - ${it.qty} ${it.unit}`).join('\n');
+      const msg = `السلام علیکم,\n${n.ur || n.en || 'Dukan Portal'} کی طرف سے اسٹاک آرڈر (Demand Slip):\n\n${itemsText}\n\nبراہ کرم یہ اسٹاک جلد از جلد بھیج دیں۔ شکریہ!`;
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Stock Demand Order',
+            text: msg
+          });
+          toast('Parchi share ho gayi!');
+          return;
+        } catch (shareErr) {
+          console.log('Direct share canceled:', shareErr);
+        }
+      }
+
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          toast('Parchi copy ho gayi! WhatsApp par Paste (Ctrl+V) karein');
+        } catch (clipErr) {
+          console.log('Clipboard error:', clipErr);
+        }
+      }
+
+      setTimeout(() => {
+        window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(msg), '_blank');
+      }, 500);
+
+    }, 'image/png');
+
+  } catch (e) {
+    toast('Error: ' + e.message, false);
+  }
+}
+
+// Modal open hote waqt search input ko clear aur focus karna
+document.getElementById('newOrderModal').addEventListener('shown.bs.modal', function () {
+  resetProductSelection();
+});
+
+load();
+</script>
+</body>
+</html>
