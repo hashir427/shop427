@@ -1,116 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Stock & Godown - Kisan Vet</title>
-  <!-- PWA & Mobile Icon Links -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d6efd">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="icon" type="image/png" href="icon-192.png">
-
+  <title>Stock Management - Kisan Vet</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Mobile Table Responsiveness & Readability Improvements */
-    .stock-table {
-      min-width: 650px; /* Mobile par columns dabenge nahi, aaram se horizontal scroll honge */
-    }
-    .stock-table th, .stock-table td {
-      vertical-align: middle;
-      font-size: 14px;
-    }
-    .stock-input {
-      min-width: 85px;
-      font-size: 14px !important;
-      font-weight: 600;
-      padding: 0.35rem 0.5rem;
-    }
-    .unit-pill {
-      font-size: 12px;
-      font-weight: 700;
-      background: #e2e8f0;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-      padding: 2px 7px;
-      border-radius: 4px;
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .bag-badge {
+      font-size: 11.5px;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      border-radius: 6px;
+      padding: 2px 6px;
       display: inline-block;
       margin-top: 3px;
     }
-    .item-name-cell {
-      min-width: 170px;
+    .med-badge {
+      font-size: 11.5px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 2px 6px;
+      display: inline-block;
+      margin-top: 3px;
     }
   </style>
 </head>
 <body>
 <div class="container py-3">
-  
-  <!-- Add New Item Card -->
-  <div class="card mb-3 shadow-sm border-0">
-    <div class="card-body">
-      <h5 class="text-em mb-3"><i class="bi bi-plus-circle"></i> Naya Item Add Karein</h5>
-      <div class="row g-2">
-        <div class="col-md-3 col-12">
-          <label class="form-label small fw-semibold d-md-none">Item Name</label>
-          <input id="n" class="form-control" placeholder="Item name *">
-        </div>
-        <div class="col-md-2 col-6">
-          <label class="form-label small fw-semibold d-md-none">Category</label>
-          <select id="c" class="form-select">
-            <option>Medicine</option>
-            <option>Feed</option>
-          </select>
-        </div>
-        <div class="col-md-2 col-6">
-          <label class="form-label small fw-semibold d-md-none">Unit (pcs, kg, etc.)</label>
-          <input id="u" class="form-control" placeholder="Unit * (pcs, kg, etc.)">
-        </div>
-        <div class="col-md-2 col-4">
-          <label class="form-label small fw-semibold d-md-none">Cost Price</label>
-          <input id="cp" type="number" class="form-control" placeholder="Cost Price">
-        </div>
-        <div class="col-md-2 col-4">
-          <label class="form-label small fw-semibold d-md-none">Sale Price</label>
-          <input id="sp" type="number" class="form-control" placeholder="Sale Price">
-        </div>
-        <div class="col-md-1 col-4">
-          <label class="form-label small fw-semibold d-md-none">Qty</label>
-          <input id="q" type="number" class="form-control" placeholder="Qty">
-        </div>
-        <div class="col-12 mt-2">
-          <button class="btn btn-em w-100 fw-semibold py-2" onclick="addItem()">
-            <i class="bi bi-plus-lg"></i> Item Stock Mein Shamil Karein
-          </button>
-        </div>
-      </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="flex-grow-1">
+      <input id="s" class="form-control" placeholder="Dawai, khal ya feed search karein...">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-em text-nowrap" data-bs-toggle="modal" data-bs-target="#newProductModal">
+        <i class="bi bi-plus-circle-fill"></i> + Naya Item Add Karein
+      </button>
     </div>
   </div>
 
-  <!-- Search Input -->
-  <div class="input-group mb-3 shadow-sm">
-    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-    <input id="s" class="form-control form-control-lg" placeholder="Search stock (name ya unit)...">
-  </div>
-  
-  <!-- Stock Table -->
   <div class="card shadow-sm border-0">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0 stock-table">
-        <thead>
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
           <tr>
-            <th class="item-name-cell">Item &amp; Unit</th>
-            <th style="width: 100px;">Type</th>
-            <th style="width: 110px;">Cost (Rs)</th>
-            <th style="width: 110px;">Sale (Rs)</th>
-            <th style="width: 110px;">Stock Qty</th>
-            <th style="width: 110px;" class="text-end">Actions</th>
+            <th>Item Details</th>
+            <th>Category</th>
+            <th>Khareed (Cost)</th>
+            <th>Bikri (Sale)</th>
+            <th>Mojooda Stock</th>
+            <th class="text-end" style="min-width: 170px;">Action</th>
           </tr>
         </thead>
-        <tbody id="t"></tbody>
+        <tbody id="stock_table"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Naya Item Modal -->
+<div class="modal fade" id="newProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h5 class="modal-title fw-bold"><i class="bi bi-box-seam"></i> Naya Stock Item</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label small fw-bold">Item Ka Naam <span class="text-danger">*</span></label>
+          <input type="text" id="np_name" class="form-control" placeholder="Maslan: Oxytetracycline Injection, Khal Banola">
+        </div>
+        
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Category</label>
+            <select id="np_cat" class="form-select" onchange="onCategoryChange()">
+              <option value="Medicine">Medicine (Dawai)</option>
+              <option value="Feed">Feed / Khal</option>
+              <option value="General">General Item</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Unit (Paimana)</label>
+            <select id="np_unit" class="form-select" onchange="onCategoryChange()">
+              <option value="Packet">Packet</option>
+              <option value="Pcs">Pcs (Nang)</option>
+              <option value="Bottle">Bottle</option>
+              <option value="Vial">Vial / Injection</option>
+              <option value="Strip">Strip (Patti)</option>
+              <option value="KG">KG (Kilogram)</option>
+              <option value="Liter">Liter</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Bori Calculator (Sirf Feed/Khal ke liye dikhega) -->
+        <div id="bori_calc_box" class="p-2 border rounded bg-light mb-2" style="display: none;">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-bold text-success"><i class="bi bi-calculator"></i> Bori Khareed Calculator</span>
+            <small class="text-muted">(Feed / Khal)</small>
+          </div>
+          <div class="row g-2">
+            <div class="col-4">
+              <label class="small text-muted">Borian</label>
+              <input type="number" id="calc_bags" class="form-control form-control-sm" placeholder="10" oninput="runBagCalc()">
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">Packing</label>
+              <select id="calc_bag_weight" class="form-select form-select-sm" onchange="runBagCalc()">
+                <option value="37">37 KG Bori</option>
+                <option value="40">40 KG Bori</option>
+                <option value="50">50 KG Bori</option>
+              </select>
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">Bori Khareed Rate</label>
+              <input type="number" id="calc_bag_cost" class="form-control form-control-sm" placeholder="3700" oninput="runBagCalc()">
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-bold" id="lbl_qty">Kul Stock (Tadad)</label>
+            <input type="number" step="any" id="np_qty" class="form-control" placeholder="e.g. 50">
+          </div>
+          <div class="col-6" id="box_bag_wt" style="display: none;">
+            <label class="form-label small fw-bold">Primary Bori Wazan (KG)</label>
+            <input type="number" step="any" id="np_bag_wt" class="form-control" value="37">
+          </div>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-bold" id="lbl_cost">Khareed Price (Cost)</label>
+            <input type="number" step="any" id="np_cost" class="form-control" placeholder="Cost per unit">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold" id="lbl_sale">Bikri Price (Sale)</label>
+            <input type="number" step="any" id="np_sale" class="form-control" placeholder="Sale per unit">
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small fw-bold">Low Stock Alert Limit</label>
+          <input type="number" id="np_limit" class="form-control" value="5">
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-em btn-sm" onclick="saveNewProduct()">Item Save Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add More Stock Modal -->
+<div class="modal fade" id="addStockModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h5 class="modal-title fw-bold"><i class="bi bi-plus-square"></i> Naya Stock Dakhil Karein</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="as_id">
+        <input type="hidden" id="as_is_kg">
+        <h6 class="fw-bold text-dark mb-1" id="as_name">-</h6>
+        <div class="small text-muted mb-3" id="as_cur_stock">Mojooda Stock: -</div>
+
+        <!-- Bori buttons sirf Feed ke liye -->
+        <div id="as_mode_selector" class="mb-3">
+          <label class="form-label small fw-bold">Stock Entry Ka Tareeqa:</label>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-success active flex-fill" id="as_btn_bori" onclick="setAddStockMode('bori')">Bori Ke Hisaab Se</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="as_btn_kg" onclick="setAddStockMode('kg')">Seedha KG Mein</button>
+          </div>
+        </div>
+
+        <div id="as_bori_inputs">
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small fw-bold">Packing Type</label>
+              <select id="as_packing" class="form-select" onchange="calcAddStock()">
+                <option value="37">37 KG Bori</option>
+                <option value="40">40 KG Bori</option>
+                <option value="50">50 KG Bori</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold">Boriyon Ki Tadad</label>
+              <input type="number" id="as_bags_count" class="form-control" placeholder="10" oninput="calcAddStock()">
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold" id="as_add_label">Kitni Tadad Stock Mein Add Karni Hai?</label>
+          <input type="number" step="any" id="as_total_qty_add" class="form-control fw-bold fs-5 text-success" placeholder="0">
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small fw-bold">Nayi Khareed Price (Cost) - Optional</label>
+          <input type="number" step="any" id="as_new_cost" class="form-control" placeholder="Agar rate badal gaya ho">
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-em btn-sm" onclick="submitAddStock()"><i class="bi bi-check-circle"></i> Stock Jama Karein</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Item Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white py-2">
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> Stock Edit Karein</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="ep_id">
+        <div class="mb-2">
+          <label class="form-label small fw-bold">Item Ka Naam</label>
+          <input type="text" id="ep_name" class="form-control">
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Total Stock</label>
+            <input type="number" step="any" id="ep_qty" class="form-control">
+          </div>
+          <div class="col-6" id="ep_box_bag_wt">
+            <label class="form-label small fw-bold">Bori Packing (KG)</label>
+            <input type="number" step="any" id="ep_bag_wt" class="form-control">
+          </div>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label small fw-bold">Khareed Price (Cost)</label>
+            <input type="number" step="any" id="ep_cost" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-bold">Bikri Price (Sale)</label>
+            <input type="number" step="any" id="ep_sale" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="updateProduct()">Save Tabdeeli</button>
+      </div>
     </div>
   </div>
 </div>
@@ -120,10 +267,57 @@
 <script src="config.js"></script>
 <script>
 renderNav('stock.html');
-let P = [];
+let P = [], addStockMode = 'bori';
+
+// Console warning prevention for all modals
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('hide.bs.modal', () => {
+    if (document.activeElement && m.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  });
+});
+
+function onCategoryChange() {
+  const cat = document.getElementById('np_cat').value;
+  const unit = document.getElementById('np_unit').value;
+  const isKgFeed = (cat === 'Feed' || unit === 'KG');
+
+  document.getElementById('bori_calc_box').style.display = isKgFeed ? 'block' : 'none';
+  document.getElementById('box_bag_wt').style.display = isKgFeed ? 'block' : 'none';
+
+  if (isKgFeed) {
+    document.getElementById('lbl_qty').textContent = 'Kul Stock (KG/Quantity)';
+    document.getElementById('lbl_cost').textContent = 'Khareed Price (Cost/KG)';
+    document.getElementById('lbl_sale').textContent = 'Khula Bikri Rate (Per KG)';
+    if (!+document.getElementById('np_bag_wt').value) document.getElementById('np_bag_wt').value = 37;
+  } else {
+    document.getElementById('lbl_qty').textContent = `Kul Stock (${unit})`;
+    document.getElementById('lbl_cost').textContent = `Khareed Rate (Per ${unit})`;
+    document.getElementById('lbl_sale').textContent = `Bikri Rate (Per ${unit})`;
+    document.getElementById('np_bag_wt').value = 0;
+  }
+}
+
+function runBagCalc() {
+  const bags = +document.getElementById('calc_bags').value || 0;
+  const bagWt = +document.getElementById('calc_bag_weight').value || 37;
+  const bagCost = +document.getElementById('calc_bag_cost').value || 0;
+
+  if (bags > 0) {
+    document.getElementById('np_qty').value = (bags * bagWt).toFixed(1);
+    document.getElementById('np_bag_wt').value = bagWt;
+  }
+  if (bagCost > 0 && bagWt > 0) {
+    const costPerKg = (bagCost / bagWt).toFixed(2);
+    document.getElementById('np_cost').value = costPerKg;
+    document.getElementById('np_sale').value = (+costPerKg + 10).toFixed(2);
+  }
+}
 
 async function load() {
   try {
+    await requireLogin();
     P = await ok(db.from('kisan_vet_products').select('*').order('name'));
     draw();
   } catch (e) {
@@ -133,89 +327,188 @@ async function load() {
 
 function draw() {
   const q = s.value.toLowerCase();
-  t.innerHTML = P.filter(p => (p.name + ' ' + (p.unit || '')).toLowerCase().includes(q)).map(p => `
-    <tr>
-      <td class="item-name-cell">
-        <div class="fw-bold fs-6 text-dark">${esc(p.name)}</div>
-        <span class="unit-pill"><i class="bi bi-box"></i> Unit: ${esc(p.unit || 'pcs')}</span>
-      </td>
-      <td>
-        <span class="badge ${p.category == 'Medicine' ? 'bg-info text-dark' : 'bg-warning text-dark'} px-2 py-1">
-          ${p.category}
-        </span>
-      </td>
-      <td>
-        <input id="c${p.id}" type="number" class="form-control stock-input" value="${p.cost_price}">
-      </td>
-      <td>
-        <input id="s${p.id}" type="number" class="form-control stock-input" value="${p.sale_price}">
-      </td>
-      <td>
-        <input id="q${p.id}" type="number" step="any" class="form-control stock-input ${p.stock_qty <= p.min_limit ? 'border-danger bg-danger-subtle text-danger' : ''}" value="${p.stock_qty}">
-      </td>
-      <td class="text-end text-nowrap">
-        <button class="btn btn-sm btn-em me-1" onclick="save(${p.id})" title="Save changes">
-          <i class="bi bi-save"></i>
-        </button>
-        <button class="btn btn-sm btn-outline-danger" onclick="rm(${p.id})" title="Delete item">
-          <i class="bi bi-trash"></i>
-        </button>
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Koi item nahi mila</td></tr>';
+  stock_table.innerHTML = P.filter(p => p.name.toLowerCase().includes(q)).map(p => {
+    const isKg = (p.unit || '').toUpperCase() === 'KG';
+    let stockDisplay = '';
+
+    if (isKg) {
+      const totalKg = +p.stock_qty;
+      const b37 = Math.floor(totalKg / 37);
+      const b40 = Math.floor(totalKg / 40);
+      stockDisplay = `
+        <div class="fw-bold text-dark fs-6">${totalKg} KG</div>
+        <div class="bag-badge">
+          <i class="bi bi-box2-fill"></i> ${b37} Bori (37KG) ya ${b40} Bori (40KG)
+        </div>
+      `;
+    } else {
+      stockDisplay = `
+        <div class="fw-bold fs-6 text-dark">${p.stock_qty} <span class="small text-muted">${esc(p.unit)}</span></div>
+        <div class="med-badge"><i class="bi bi-capsule"></i> ${esc(p.unit)} Stock</div>
+      `;
+    }
+
+    return `
+      <tr>
+        <td>
+          <div class="fw-bold text-dark">${esc(p.name)}</div>
+          <small class="text-muted">${isKg ? 'Dual Packing: 37KG / 40KG' : esc(p.unit) + ' Packaging'}</small>
+        </td>
+        <td><span class="badge ${p.category === 'Medicine' ? 'bg-info-subtle text-info-emphasis border border-info-subtle' : 'bg-light text-dark border'}">${esc(p.category || 'General')}</span></td>
+        <td>${rs(p.cost_price)}</td>
+        <td class="fw-bold text-success">${rs(p.sale_price)}</td>
+        <td>${stockDisplay}</td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-sm btn-outline-success me-1" onclick="openAddStockModal(${p.id})" title="Naya stock add karein">
+            <i class="bi bi-plus-lg"></i> Maal Add
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="openEdit(${p.id})"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="del(${p.id})"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Koi item nahi mila</td></tr>';
 }
 
-async function addItem() {
-  const name = n.value.trim();
-  const unit = u.value.trim();
+function openAddStockModal(id) {
+  const p = P.find(x => x.id === id);
+  if (!p) return;
 
-  if (!name && !unit) {
-    return toast('Item ka naam aur unit dono likhna zaroori hai', false);
+  const isKg = (p.unit || '').toUpperCase() === 'KG';
+  document.getElementById('as_id').value = p.id;
+  document.getElementById('as_is_kg').value = isKg ? '1' : '0';
+  document.getElementById('as_name').textContent = p.name;
+  document.getElementById('as_cur_stock').textContent = `Mojooda Stock: ${p.stock_qty} ${p.unit}`;
+  document.getElementById('as_bags_count').value = '';
+  document.getElementById('as_total_qty_add').value = '';
+  document.getElementById('as_new_cost').value = '';
+
+  if (isKg) {
+    document.getElementById('as_mode_selector').style.display = 'block';
+    document.getElementById('as_add_label').textContent = 'Kul Kitne KG Stock Mein Add Hoga?';
+    setAddStockMode('bori');
+  } else {
+    // Medicine / Non-KG item
+    document.getElementById('as_mode_selector').style.display = 'none';
+    document.getElementById('as_bori_inputs').style.display = 'none';
+    document.getElementById('as_add_label').textContent = `Kitne ${p.unit} Stock Mein Add Karne Hain?`;
   }
-  if (!name) {
-    return toast('Item ka naam likhein', false);
+
+  new bootstrap.Modal(document.getElementById('addStockModal')).show();
+}
+
+function setAddStockMode(mode) {
+  addStockMode = mode;
+  document.getElementById('as_btn_bori').classList.toggle('active', mode === 'bori');
+  document.getElementById('as_btn_kg').classList.toggle('active', mode === 'kg');
+  document.getElementById('as_bori_inputs').style.display = (mode === 'bori') ? 'block' : 'none';
+  calcAddStock();
+}
+
+function calcAddStock() {
+  const isKg = document.getElementById('as_is_kg').value === '1';
+  if (isKg && addStockMode === 'bori') {
+    const packing = +document.getElementById('as_packing').value || 37;
+    const bags = +document.getElementById('as_bags_count').value || 0;
+    document.getElementById('as_total_qty_add').value = (packing * bags);
   }
-  if (!unit) {
-    return toast('Unit (maslan: pcs, kg, litre, packet) likhna zaroori hai', false);
+}
+
+async function submitAddStock() {
+  const id = +document.getElementById('as_id').value;
+  const isKg = document.getElementById('as_is_kg').value === '1';
+  const p = P.find(x => x.id === id);
+  const addQty = +document.getElementById('as_total_qty_add').value || 0;
+  const newCost = +document.getElementById('as_new_cost').value || 0;
+
+  if (addQty <= 0) return toast('Baraye meharbani tadad darj karein', false);
+
+  const newTotalQty = (+p.stock_qty || 0) + addQty;
+  let updateData = { stock_qty: newTotalQty };
+
+  if (newCost > 0) {
+    if (isKg && addStockMode === 'bori') {
+      const packing = +document.getElementById('as_packing').value || 37;
+      const newCostPerKg = +(newCost / packing).toFixed(2);
+      updateData.cost_price = newCostPerKg;
+      updateData.sale_price = +(newCostPerKg + 10).toFixed(2);
+    } else {
+      updateData.cost_price = newCost;
+    }
   }
 
   try {
-    await ok(db.from('kisan_vet_products').insert({
-      name: name,
-      category: c.value,
-      unit: unit,
-      cost_price: +cp.value || 0,
-      sale_price: +sp.value || 0,
-      stock_qty: +q.value || 0
-    }));
-
-    toast('Item kamyabi se add ho gaya');
-    n.value = u.value = cp.value = sp.value = q.value = '';
+    await ok(db.from('kisan_vet_products').update(updateData).eq('id', id));
+    toast(`${addQty} ${p.unit} maal kamyabi se stock mein add ho gaya!`);
+    bootstrap.Modal.getInstance(document.getElementById('addStockModal')).hide();
     load();
   } catch (e) {
     toast(e.message, false);
   }
 }
 
-async function save(id) {
+async function saveNewProduct() {
+  const name = np_name.value.trim();
+  const unit = np_unit.value;
+  const category = np_cat.value;
+  const stock_qty = +np_qty.value || 0;
+  const bag_weight = +np_bag_wt.value || 0;
+  const cost_price = +np_cost.value || 0;
+  const sale_price = +np_sale.value || 0;
+  const min_limit = +np_limit.value || 5;
+
+  if (!name) return toast('Item ka naam likhna zaroori hai', false);
+
+  try {
+    await ok(db.from('kisan_vet_products').insert([{
+      name, unit, category, stock_qty, bag_weight, cost_price, sale_price, min_limit
+    }]));
+    toast('Item kamyabi se add ho gaya!');
+    bootstrap.Modal.getInstance(document.getElementById('newProductModal')).hide();
+    load();
+  } catch (e) {
+    toast(e.message, false);
+  }
+}
+
+function openEdit(id) {
+  const p = P.find(x => x.id === id);
+  if (!p) return;
+  const isKg = (p.unit || '').toUpperCase() === 'KG';
+
+  ep_id.value = p.id;
+  ep_name.value = p.name;
+  ep_qty.value = p.stock_qty;
+  ep_bag_wt.value = p.bag_weight || 0;
+  ep_cost.value = p.cost_price;
+  ep_sale.value = p.sale_price;
+  document.getElementById('ep_box_bag_wt').style.display = isKg ? 'block' : 'none';
+
+  new bootstrap.Modal(document.getElementById('editProductModal')).show();
+}
+
+async function updateProduct() {
   try {
     await ok(db.from('kisan_vet_products').update({
-      cost_price: +document.getElementById('c' + id).value || 0,
-      sale_price: +document.getElementById('s' + id).value || 0,
-      stock_qty: +document.getElementById('q' + id).value || 0
-    }).eq('id', id));
-    toast('Update ho gaya');
+      name: ep_name.value.trim(),
+      stock_qty: +ep_qty.value || 0,
+      bag_weight: +ep_bag_wt.value || 0,
+      cost_price: +ep_cost.value || 0,
+      sale_price: +ep_sale.value || 0
+    }).eq('id', ep_id.value));
+    toast('Stock update ho gaya');
+    bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
     load();
   } catch (e) {
     toast(e.message, false);
   }
 }
 
-async function rm(id) {
-  if (!confirm('Yeh item delete karna hai?')) return;
+async function del(id) {
+  if (!confirm('Kya aap is item ko delete karna chahte hain?')) return;
   try {
     await ok(db.from('kisan_vet_products').delete().eq('id', id));
-    toast('Delete ho gaya');
+    toast('Item delete ho gaya');
     load();
   } catch (e) {
     toast(e.message, false);
@@ -223,6 +516,7 @@ async function rm(id) {
 }
 
 s.oninput = draw;
+onCategoryChange();
 load();
 </script>
 </body>
