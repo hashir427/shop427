@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Naya Bill - Kisan Vet</title>
-  <!-- PWA & Mobile Icon Links -->
+  <title>Naya Bill - Kisan Vet & Khal Store</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#047857">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -15,11 +14,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .urdu { font-family: 'Noto Nastaliq Urdu', serif; }
+    .pcard {
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      background: #ffffff;
+    }
+    .pcard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-color: #10b981;
+    }
     .cart-container {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 16px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
       overflow: hidden;
     }
     .cart-header {
@@ -28,43 +45,32 @@
       padding: 14px 18px;
     }
     .cart-table-wrapper {
-      max-height: 38vh;
+      max-height: 40vh;
       overflow-y: auto;
       scrollbar-width: thin;
       background: #fafbfc;
     }
-    .cart-table {
-      margin-bottom: 0;
-      font-size: 13.5px;
-    }
+    .cart-table { margin-bottom: 0; font-size: 13px; }
     .cart-table thead th {
       background: #f1f5f9;
       color: #475569;
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11.5px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
       padding: 10px 8px;
       border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
       z-index: 10;
     }
-    .cart-row {
-      background: #ffffff;
-      transition: background 0.15s ease;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    .cart-row:hover {
-      background: #f8fafc;
-    }
+    .cart-row { background: #ffffff; border-bottom: 1px solid #f1f5f9; }
     .qty-stepper {
       display: inline-flex;
       align-items: center;
       background: #f1f5f9;
       border-radius: 8px;
       padding: 2px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #cbd5e1;
     }
     .qty-stepper button {
       border: none;
@@ -76,27 +82,18 @@
       justify-content: center;
       color: #047857;
       font-weight: bold;
-      border-radius: 6px;
-      transition: background 0.15s;
-    }
-    .qty-stepper button:hover {
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .qty-input {
-      width: 44px;
+      width: 46px;
       text-align: center;
       border: none;
       background: transparent;
       font-weight: 700;
       font-size: 13px;
-      color: #0f172a;
     }
-    .qty-input:focus {
-      outline: none;
-    }
+    .qty-input:focus { outline: none; }
     .price-input {
-      width: 70px;
+      width: 75px;
       font-size: 13px;
       font-weight: 600;
       text-align: right;
@@ -110,63 +107,66 @@
       border-radius: 12px;
       padding: 12px;
     }
-    .summary-card {
-      border-radius: 12px;
-      padding: 10px 14px;
-    }
-    .btn-quick-pay {
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 8px;
-      padding: 5px 10px;
-    }
-    .delete-item-btn {
-      color: #94a3b8;
-      border: none;
-      background: transparent;
-      transition: color 0.15s;
-    }
-    .delete-item-btn:hover {
-      color: #ef4444;
-    }
-    /* Mode Toggle Badges (Naqad / Udhaar for each item) */
+    .summary-card { border-radius: 12px; padding: 10px 14px; }
     .item-mode-btn {
-      font-size: 11px;
+      font-size: 10.5px;
       padding: 2px 6px;
       border-radius: 4px;
       cursor: pointer;
-      border: 1px solid transparent;
       font-weight: 600;
     }
-    .item-mode-btn.cash-active {
-      background: #dcfce7;
-      color: #15803d;
-      border-color: #86efac;
+    .item-mode-btn.cash-active { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .item-mode-btn.udhaar-active { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    /* Dual Packing Buttons (Khula, 37KG Bori, 40KG Bori) */
+    .pack-pill {
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      font-weight: 600;
     }
-    .item-mode-btn.udhaar-active {
-      background: #fee2e2;
-      color: #b91c1c;
-      border-color: #fca5a5;
+    .pack-pill.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #billReceiptModal, #billReceiptModal * { visibility: visible; }
+      #billReceiptModal { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
+      .modal-footer, .btn-close { display: none !important; }
     }
   </style>
 </head>
 <body>
 <div class="container-fluid p-3">
   <div class="row g-3">
-    <!-- Products Selection Section -->
+    
+    <!-- Left Column: Products Grid -->
     <div class="col-lg-7">
       <div class="input-group input-group-lg mb-3 shadow-sm">
         <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-search"></i></span>
-        <input id="s" class="form-control border-start-0" placeholder="Dawai ya feed search karein..." autofocus>
+        <input id="s" class="form-control border-start-0" placeholder="Dawai, khal ya feed search karein..." autofocus>
       </div>
+
+      <div class="d-flex gap-2 mb-3 overflow-x-auto pb-1">
+        <button type="button" class="btn btn-sm btn-outline-success active" id="cat_all" onclick="filterCat('all')">Sab Items</button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="cat_feed" onclick="filterCat('Feed / Khal')">Feed &amp; Khal</button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="cat_med" onclick="filterCat('Medicine')">Medicine</button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="cat_gen" onclick="filterCat('General')">General</button>
+      </div>
+
       <div id="g" class="row g-2"></div>
     </div>
 
-    <!-- Enhanced Billing Cart Section -->
+    <!-- Right Column: POS Billing Cart -->
     <div class="col-lg-5">
       <div class="cart-container">
         
-        <!-- Cart Header -->
         <div class="cart-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-bag-check-fill fs-5"></i>
@@ -177,15 +177,14 @@
           </span>
         </div>
         
-        <!-- Items Table -->
         <div class="cart-table-wrapper">
           <table class="table cart-table align-middle">
             <thead>
               <tr>
-                <th>Item &amp; Type</th>
-                <th style="width: 100px;">Qty</th>
-                <th style="width: 75px;" class="text-end">Rate</th>
-                <th style="width: 80px;" class="text-end">Total</th>
+                <th>Item &amp; Packing</th>
+                <th style="width: 105px;">Qty</th>
+                <th style="width: 80px;" class="text-end">Rate</th>
+                <th style="width: 85px;" class="text-end">Total</th>
                 <th style="width: 30px;"></th>
               </tr>
             </thead>
@@ -194,7 +193,7 @@
         </div>
 
         <div class="p-3 border-top">
-          <!-- Customer Selection with Dropdown List -->
+          <!-- Customer Details -->
           <div class="customer-box mb-3">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="fw-bold small text-secondary"><i class="bi bi-person-fill"></i> Customer Details</span>
@@ -213,23 +212,19 @@
             </div>
           </div>
 
-          <!-- Total Bill Big Display -->
+          <!-- Total Bill -->
           <div class="summary-card bg-light border d-flex justify-content-between align-items-center mb-2">
             <span class="text-secondary fw-semibold">Kul Bill (Total Amount):</span>
             <span class="fs-4 fw-bold text-dark" id="tot">Rs 0</span>
           </div>
 
-          <!-- Payment Input & Quick Shortcuts -->
+          <!-- Payment Input -->
           <div class="mb-2">
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="small fw-semibold text-secondary">Naqad Adaigi (Cash Paid):</span>
               <div class="d-flex gap-1">
-                <button type="button" class="btn btn-sm btn-outline-success btn-quick-pay" onclick="markAllCash()">
-                  <i class="bi bi-check-all"></i> Sab Naqad
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger btn-quick-pay" onclick="markAllUdhaar()">
-                  <i class="bi bi-clock-history"></i> Sab Udhaar
-                </button>
+                <button type="button" class="btn btn-sm btn-outline-success" style="font-size:11px;" onclick="markAllCash()">Sab Naqad</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" style="font-size:11px;" onclick="markAllUdhaar()">Sab Udhaar</button>
               </div>
             </div>
             <div class="input-group">
@@ -238,13 +233,12 @@
             </div>
           </div>
 
-          <!-- Udhaar Status Box -->
+          <!-- Udhaar Reminder Box -->
           <div class="summary-card bg-danger-subtle border border-danger-subtle d-flex justify-content-between align-items-center mb-3">
             <span class="text-danger fw-semibold"><i class="bi bi-exclamation-circle-fill me-1"></i> Is Bill Ka Baqaya Udhaar:</span>
             <span class="fs-5 fw-bold text-danger" id="ud">Rs 0</span>
           </div>
 
-          <!-- Submit Button -->
           <button id="done" class="btn btn-em btn-lg w-100 shadow-sm fw-bold py-2 d-flex justify-content-center align-items-center gap-2" onclick="done()">
             <i class="bi bi-check-circle-fill fs-5"></i>
             <span>Bill Save &amp; Print Karein</span>
@@ -256,25 +250,86 @@
   </div>
 </div>
 
+<!-- Bill Receipt Modal -->
+<div class="modal fade" id="billReceiptModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white py-2">
+        <h5 class="modal-title fw-bold"><i class="bi bi-receipt"></i> Bill Receipt</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-3">
+        <div class="text-center mb-3 pb-2 border-bottom">
+          <h4 class="fw-bold mb-0 text-success" id="rcpt_shop_name">Kisan Veterinary Clinic</h4>
+          <div class="urdu fs-5" id="rcpt_shop_ur"></div>
+          <div class="small text-muted">Official POS Cash &amp; Khata Receipt</div>
+          <div class="small text-muted" id="rcpt_date"></div>
+        </div>
+        <table class="w-100 small mb-2">
+          <tr>
+            <td><strong>Customer:</strong> <span id="rcpt_cust"></span></td>
+            <td class="text-end"><strong>Phone:</strong> <span id="rcpt_phone"></span></td>
+          </tr>
+        </table>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-2" style="font-size: 12px;">
+            <thead class="table-light">
+              <tr>
+                <th>Item &amp; Packing</th>
+                <th class="text-center">Qty</th>
+                <th class="text-end">Rate</th>
+                <th class="text-end">Total</th>
+              </tr>
+            </thead>
+            <tbody id="rcpt_items"></tbody>
+          </table>
+        </div>
+        <div class="border-top pt-2">
+          <div class="d-flex justify-content-between fw-bold mb-1">
+            <span>Kul Bill:</span>
+            <span id="rcpt_total"></span>
+          </div>
+          <div class="d-flex justify-content-between text-success mb-1">
+            <span>Naqad Adaigi (Cash Paid):</span>
+            <span id="rcpt_paid"></span>
+          </div>
+          <div class="d-flex justify-content-between text-danger fw-bold">
+            <span>Baqaya Udhaar:</span>
+            <span id="rcpt_udhaar"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-1 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-em btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print Receipt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
 renderNav('index.html');
-let P = [], cart = [], custList = [], manualPaidTouched = false;
+let P = [], cart = [], custList = [], activeCat = 'all', manualPaidTouched = false, S = {};
 
 async function load() {
   try {
-    const [products, customers] = await Promise.all([
+    await requireLogin();
+    const [products, customers, settings] = await Promise.all([
       ok(db.from('kisan_vet_products').select('*').order('name')),
-      ok(db.from('kisan_vet_customers').select('*').order('name'))
+      ok(db.from('kisan_vet_customers').select('*').order('name')),
+      getSettings()
     ]);
-    P = products;
-    custList = customers;
+    P = products || [];
+    custList = customers || [];
+    S = settings || {};
+    applyShop(S);
     
     const dl = document.getElementById('custList');
     if (dl) {
-      dl.innerHTML = custList.map(c => `<option value="${esc(c.name)}">${c.phone ? esc(c.phone) : 'No Phone'} | Khata: ${rs(c.khata_balance)}</option>`).join('');
+      dl.innerHTML = custList.map(c => `<option value="${esc(c.name)}">${c.phone || ''} | Bal: ${rs(c.khata_balance)}</option>`).join('');
     }
     grid();
   } catch (e) {
@@ -282,54 +337,118 @@ async function load() {
   }
 }
 
+function filterCat(cat) {
+  activeCat = cat;
+  ['all', 'feed', 'med', 'gen'].forEach(id => {
+    const el = document.getElementById('cat_' + id);
+    if (el) el.classList.remove('active');
+  });
+  if (cat === 'all') document.getElementById('cat_all').classList.add('active');
+  else if (cat === 'Feed / Khal') document.getElementById('cat_feed').classList.add('active');
+  else if (cat === 'Medicine') document.getElementById('cat_med').classList.add('active');
+  else if (cat === 'General') document.getElementById('cat_gen').classList.add('active');
+  grid();
+}
+
 function onCustomerSelect(val) {
   const match = custList.find(c => c.name.toLowerCase() === val.trim().toLowerCase());
   const balBadge = document.getElementById('prev_bal_badge');
-  const balSpan = document.getElementById('prev_bal');
-  
   if (match) {
     if (match.phone) cp.value = match.phone;
     if (match.khata_balance > 0) {
       balBadge.classList.remove('d-none');
-      balSpan.textContent = rs(match.khata_balance);
-    } else {
-      balBadge.classList.add('d-none');
-    }
-  } else {
-    balBadge.classList.add('d-none');
-  }
+      document.getElementById('prev_bal').textContent = rs(match.khata_balance);
+    } else balBadge.classList.add('d-none');
+  } else balBadge.classList.add('d-none');
 }
 
 function grid() {
   const q = s.value.toLowerCase();
-  g.innerHTML = P.filter(p => p.name.toLowerCase().includes(q)).map(p => `
-    <div class="col-6 col-md-4">
-      <div class="card pcard h-100 shadow-sm ${p.stock_qty <= 0 ? 'opacity-50' : ''}" onclick="add(${p.id})">
-        <div class="card-body p-2 d-flex flex-column justify-content-between">
-          <div>
-            <span class="badge ${p.category == 'Medicine' ? 'bg-info text-dark' : 'bg-warning text-dark'}">${p.category}</span>
-            <div class="fw-semibold mt-1 text-truncate" title="${esc(p.name)}">${esc(p.name)}</div>
-          </div>
-          <div class="mt-2">
-            <div class="text-em fw-bold">${rs(p.sale_price)} <small class="text-muted fw-normal">/${esc(p.unit)}</small></div>
-            <span class="badge ${p.stock_qty <= p.min_limit ? 'bg-danger' : 'bg-success'}">Stock: ${p.stock_qty}</span>
+  const filtered = P.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(q);
+    const matchesCat = (activeCat === 'all') || (p.category === activeCat);
+    return matchesSearch && matchesCat;
+  });
+
+  g.innerHTML = filtered.map(p => {
+    const isKgItem = (p.unit || '').toUpperCase() === 'KG';
+    let bagPill = '';
+    if (isKgItem) {
+      const b37 = Math.floor(p.stock_qty / 37);
+      const b40 = Math.floor(p.stock_qty / 40);
+      bagPill = `<div class="small text-muted mt-1">Stock: <strong>${p.stock_qty} KG</strong> (~${b37} Bori)</div>`;
+    }
+
+    return `
+      <div class="col-6 col-md-4">
+        <div class="card pcard h-100 shadow-sm ${p.stock_qty <= 0 ? 'opacity-50' : ''}" onclick="add(${p.id})">
+          <div class="card-body p-2 d-flex flex-column justify-content-between">
+            <div>
+              <span class="badge ${p.category === 'Medicine' ? 'bg-info text-dark' : 'bg-warning text-dark'}">${esc(p.category || 'General')}</span>
+              <div class="fw-semibold mt-1 text-truncate" title="${esc(p.name)}">${esc(p.name)}</div>
+            </div>
+            <div class="mt-2">
+              <div class="text-em fw-bold">${rs(p.sale_price)} <small class="text-muted fw-normal">/${esc(p.unit)}</small></div>
+              <span class="badge ${p.stock_qty <= p.min_limit ? 'bg-danger' : 'bg-success'}">${p.stock_qty} ${esc(p.unit)}</span>
+              ${bagPill}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `).join('') || '<p class="text-muted p-2">Koi item nahi mila.</p>';
+    `;
+  }).join('') || '<p class="text-muted p-3">Koi item nahi mila.</p>';
 }
 
 function add(id) {
-  const p = P.find(x => x.id == id), c = cart.find(x => x.id == id);
+  const p = P.find(x => x.id === id);
+  if (!p) return;
   if (p.stock_qty <= 0) return toast('Stock khatam hai', false);
+
+  const isKgItem = (p.unit || '').toUpperCase() === 'KG';
+  const c = cart.find(x => x.id === id && x.pack_mode === 'khula');
+
   if (c) {
     if (c.qty + 1 > p.stock_qty) return toast('Itna stock nahi hai', false);
     c.qty++;
   } else {
-    // Default mode: 'cash'
-    cart.push({ id: p.id, name: p.name, unit: p.unit, price: +p.sale_price, cost: +p.cost_price, qty: 1, mode: 'cash' });
+    cart.push({
+      id: p.id,
+      name: p.name,
+      unit: p.unit,
+      is_kg: isKgItem,
+      pack_mode: 'khula', // 'khula', 'bori37', 'bori40'
+      deduct_kg_per_unit: 1,
+      price: +p.sale_price,
+      cost: +p.cost_price,
+      qty: 1,
+      mode: 'cash'
+    });
   }
+  manualPaidTouched = false;
+  draw();
+}
+
+function setItemPackMode(i, mode) {
+  const c = cart[i];
+  const p = P.find(x => x.id === c.id);
+  c.pack_mode = mode;
+
+  if (mode === 'bori37') {
+    c.deduct_kg_per_unit = 37;
+    c.qty = 1;
+    // 37 KG bori wholesale price (Cost * 37 + thoda munafa)
+    c.price = Math.round(p.cost_price * 37) + 120;
+  } else if (mode === 'bori40') {
+    c.deduct_kg_per_unit = 40;
+    c.qty = 1;
+    // 40 KG bori wholesale price (Cost * 40 + thoda munafa)
+    c.price = Math.round(p.cost_price * 40) + 130;
+  } else {
+    c.deduct_kg_per_unit = 1;
+    c.qty = 1;
+    c.price = +p.sale_price;
+  }
+
   manualPaidTouched = false;
   draw();
 }
@@ -354,22 +473,25 @@ function markAllUdhaar() {
 
 function stepQty(i, delta) {
   const c = cart[i];
-  const p = P.find(x => x.id == c.id);
+  const p = P.find(x => x.id === c.id);
   const newQty = Math.max(0.1, Number((c.qty + delta).toFixed(2)));
-  if (newQty > p.stock_qty) return toast('Stock se zyada quantity nahi ho sakti', false);
+  const totalDeductKg = newQty * c.deduct_kg_per_unit;
+  if (totalDeductKg > p.stock_qty) return toast('Stock se zyada quantity nahi ho sakti', false);
   c.qty = newQty;
   manualPaidTouched = false;
   draw();
 }
 
 function setQty(i, v) {
-  const p = P.find(x => x.id == cart[i].id);
-  v = +v;
-  if (v > p.stock_qty) {
+  const c = cart[i];
+  const p = P.find(x => x.id === c.id);
+  v = Math.max(0.1, +v || 1);
+  const totalDeductKg = v * c.deduct_kg_per_unit;
+  if (totalDeductKg > p.stock_qty) {
     toast('Itna stock nahi hai', false);
-    v = p.stock_qty;
+    return;
   }
-  cart[i].qty = v > 0 ? v : 1;
+  c.qty = v;
   manualPaidTouched = false;
   draw();
 }
@@ -391,37 +513,50 @@ const total = () => cart.reduce((a, c) => a + c.price * c.qty, 0);
 function draw() {
   document.getElementById('cart_badge_count').textContent = cart.length + ' Items';
   
-  cart_.innerHTML = cart.map((c, i) => `
-    <tr class="cart-row">
-      <td>
-        <div class="fw-bold text-dark text-truncate" style="max-width: 140px;">${esc(c.name)}</div>
-        <div class="d-flex align-items-center gap-1 mt-1">
-          <span class="item-mode-btn ${c.mode === 'cash' ? 'cash-active' : 'text-muted'}" onclick="toggleItemMode(${i}, 'cash')">
-            <i class="bi bi-cash"></i> Naqad
-          </span>
-          <span class="item-mode-btn ${c.mode === 'udhaar' ? 'udhaar-active' : 'text-muted'}" onclick="toggleItemMode(${i}, 'udhaar')">
-            <i class="bi bi-clock-history"></i> Udhaar
-          </span>
-        </div>
-      </td>
-      <td>
-        <div class="qty-stepper">
-          <button type="button" onclick="stepQty(${i}, -1)">-</button>
-          <input type="number" step="any" class="qty-input" value="${c.qty}" onchange="setQty(${i}, this.value)">
-          <button type="button" onclick="stepQty(${i}, 1)">+</button>
-        </div>
-      </td>
-      <td class="text-end">
-        <input type="number" class="price-input" value="${c.price}" onchange="setPrice(${i}, this.value)">
-      </td>
-      <td class="text-end fw-bold text-dark">${rs(c.price * c.qty)}</td>
-      <td class="text-center">
-        <button class="delete-item-btn" onclick="del(${i})" title="Delete item">
-          <i class="bi bi-trash3-fill"></i>
-        </button>
-      </td>
-    </tr>
-  `).join('') || `
+  cart_.innerHTML = cart.map((c, i) => {
+    // 37 KG aur 40 KG Bori Buttons
+    const packSwitchHTML = c.is_kg ? `
+      <div class="d-flex gap-1 mt-1">
+        <span class="pack-pill ${c.pack_mode === 'khula' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'khula')">Khula KG</span>
+        <span class="pack-pill ${c.pack_mode === 'bori37' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori37')">37KG Bori</span>
+        <span class="pack-pill ${c.pack_mode === 'bori40' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori40')">40KG Bori</span>
+      </div>
+    ` : '';
+
+    let unitLabel = esc(c.unit);
+    if (c.pack_mode === 'bori37') unitLabel = 'Bori (37KG)';
+    if (c.pack_mode === 'bori40') unitLabel = 'Bori (40KG)';
+
+    return `
+      <tr class="cart-row">
+        <td>
+          <div class="fw-bold text-dark text-truncate" style="max-width: 140px;">${esc(c.name)}</div>
+          ${packSwitchHTML}
+          <div class="d-flex align-items-center gap-1 mt-1">
+            <span class="item-mode-btn ${c.mode === 'cash' ? 'cash-active' : 'text-muted'}" onclick="toggleItemMode(${i}, 'cash')">Naqad</span>
+            <span class="item-mode-btn ${c.mode === 'udhaar' ? 'udhaar-active' : 'text-muted'}" onclick="toggleItemMode(${i}, 'udhaar')">Udhaar</span>
+          </div>
+        </td>
+        <td>
+          <div class="qty-stepper">
+            <button type="button" onclick="stepQty(${i}, -1)">-</button>
+            <input type="number" step="any" class="qty-input" value="${c.qty}" onchange="setQty(${i}, this.value)">
+            <button type="button" onclick="stepQty(${i}, 1)">+</button>
+          </div>
+          <small class="text-muted d-block text-center mt-1">${unitLabel}</small>
+        </td>
+        <td class="text-end">
+          <input type="number" class="price-input" value="${c.price}" onchange="setPrice(${i}, this.value)">
+        </td>
+        <td class="text-end fw-bold text-dark">${rs(c.price * c.qty)}</td>
+        <td class="text-center">
+          <button class="delete-item-btn" onclick="del(${i})" title="Delete item">
+            <i class="bi bi-trash3-fill"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('') || `
     <tr>
       <td colspan="5" class="text-center py-4 text-muted">
         <i class="bi bi-cart-x fs-1 d-block mb-1 opacity-50"></i>
@@ -430,7 +565,6 @@ function draw() {
     </tr>
   `;
 
-  // Calculate automatically based on item modes if user hasn't manually overridden
   const t = total();
   if (!manualPaidTouched) {
     const cashTotal = cart.filter(c => c.mode === 'cash').reduce((sum, c) => sum + (c.price * c.qty), 0);
@@ -455,16 +589,19 @@ async function done() {
   const name = cn.value.trim(), phone = cp.value.trim();
 
   if (u > 0 && !name && !phone) {
-    return toast('Udhaar ke liye customer ka naam ya number likhna zaroori hai', false);
+    return toast('Udhaar ke liye customer ka naam ya phone number likhna zaroori hai', false);
   }
 
   done_.disabled = true;
   try {
+    // 1. Verify stock availability (Checking total required KG)
     for (const c of cart) {
       const p = await ok(db.from('kisan_vet_products').select('stock_qty,name').eq('id', c.id).single());
-      if (+p.stock_qty < c.qty) throw new Error('Stock kam hai: ' + p.name);
+      const totalDeductKg = c.qty * c.deduct_kg_per_unit;
+      if (+p.stock_qty < totalDeductKg) throw new Error('Stock kam hai: ' + p.name);
     }
 
+    // 2. Customer Khata Entry
     let cid = null;
     if (name || phone) {
       let q = db.from('kisan_vet_customers').select('*');
@@ -488,32 +625,43 @@ async function done() {
       }
     }
 
-    // Deduct Stock
+    // 3. Deduct stock accurately in KGs
     for (const c of cart) {
       const p = await ok(db.from('kisan_vet_products').select('stock_qty').eq('id', c.id).single());
-      await ok(db.from('kisan_vet_products').update({ stock_qty: +p.stock_qty - c.qty }).eq('id', c.id));
+      const totalDeductKg = c.qty * c.deduct_kg_per_unit;
+      await ok(db.from('kisan_vet_products').update({ stock_qty: +p.stock_qty - totalDeductKg }).eq('id', c.id));
     }
 
-    // Save Sale with individual item pay status
+    // 4. Save Sales Entry with Packing info
+    const saleItems = cart.map(c => {
+      let label = c.name;
+      if (c.pack_mode === 'bori37') label += ` (${c.qty} Bori - 37KG)`;
+      else if (c.pack_mode === 'bori40') label += ` (${c.qty} Bori - 40KG)`;
+
+      return {
+        id: c.id,
+        name: label,
+        unit: (c.pack_mode.startsWith('bori')) ? 'Bori' : c.unit,
+        qty: c.qty,
+        price: c.price,
+        cost: (c.pack_mode.startsWith('bori')) ? (c.cost * c.deduct_kg_per_unit) : c.cost,
+        mode: c.mode,
+        total: c.price * c.qty
+      };
+    });
+
     await ok(db.from('kisan_vet_sales').insert({
       customer_id: cid,
       customer_name: name || 'Walk-in',
       total_amount: t,
       cash_paid: paid,
       udhaar_amount: u,
-      items: cart.map(c => ({
-        id: c.id,
-        name: c.name,
-        unit: c.unit,
-        qty: c.qty,
-        price: c.price,
-        cost: c.cost,
-        mode: c.mode, // 'cash' ya 'udhaar'
-        total: c.price * c.qty
-      }))
+      items: saleItems
     }));
 
-    toast('Bill save ho gaya: ' + rs(t));
+    toast('Bill kamyabi se save ho gaya: ' + rs(t));
+    showReceipt(name || 'Walk-in', phone || '-', t, paid, u, saleItems);
+
     cart = [];
     cn.value = cp.value = '';
     document.getElementById('prev_bal_badge').classList.add('d-none');
@@ -526,12 +674,37 @@ async function done() {
   done_.disabled = false;
 }
 
+function showReceipt(name, phone, t, paid, u, items) {
+  const n = shopNames(S);
+  document.getElementById('rcpt_shop_name').textContent = n.en || n.ur || 'Kisan Veterinary Clinic';
+  document.getElementById('rcpt_shop_ur').textContent = (n.en && n.ur) ? n.ur : '';
+  document.getElementById('rcpt_date').textContent = new Date().toLocaleString('en-GB');
+  document.getElementById('rcpt_cust').textContent = name;
+  document.getElementById('rcpt_phone').textContent = phone;
+  document.getElementById('rcpt_total').textContent = rs(t);
+  document.getElementById('rcpt_paid').textContent = rs(paid);
+  document.getElementById('rcpt_udhaar').textContent = rs(u);
+
+  document.getElementById('rcpt_items').innerHTML = items.map(i => `
+    <tr>
+      <td>${esc(i.name)} <small class="text-muted">(${i.mode === 'cash' ? 'Naqad' : 'Udhaar'})</small></td>
+      <td class="text-center">${i.qty}</td>
+      <td class="text-end">${rs(i.price)}</td>
+      <td class="text-end fw-bold">${rs(i.total)}</td>
+    </tr>
+  `).join('');
+
+  new bootstrap.Modal(document.getElementById('billReceiptModal')).show();
+}
+
 const cart_ = document.getElementById('cart'), done_ = document.getElementById('done');
 window.done = done;
 window.markAllCash = markAllCash;
 window.markAllUdhaar = markAllUdhaar;
 window.stepQty = stepQty;
 window.toggleItemMode = toggleItemMode;
+window.setItemPackMode = setItemPackMode;
+window.filterCat = filterCat;
 load();
 draw();
 </script>
