@@ -35,7 +35,7 @@
 <div class="container py-3">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div class="flex-grow-1">
-      <input id="s" class="form-control" placeholder="Dawai, khal ya feed search karein...">
+      <input id="s" class="form-control" placeholder="Dawai, khal ya murghi feed search karein...">
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-em text-nowrap" data-bs-toggle="modal" data-bs-target="#newProductModal">
@@ -51,8 +51,8 @@
           <tr>
             <th>Item Details</th>
             <th>Category</th>
-            <th>Khareed (Cost)</th>
-            <th>Bikri (Sale)</th>
+            <th>Khareed (CP)</th>
+            <th>Bikri (SP)</th>
             <th>Mojooda Stock</th>
             <th class="text-end" style="min-width: 170px;">Action</th>
           </tr>
@@ -74,83 +74,83 @@
       <div class="modal-body">
         <div class="mb-2">
           <label class="form-label small fw-bold">Item Ka Naam <span class="text-danger">*</span></label>
-          <input type="text" id="np_name" class="form-control" placeholder="Maslan: Oxytetracycline Injection, Khal Banola">
+          <input type="text" id="np_name" class="form-control" placeholder="Maslan: Khal Banola, Broiler Feed 14 No">
         </div>
         
         <div class="row g-2 mb-2">
           <div class="col-6">
             <label class="form-label small fw-bold">Category</label>
-            <select id="np_cat" class="form-select" onchange="onCategoryChange()">
-              <option value="Medicine">Medicine (Dawai)</option>
+            <select id="np_cat" class="form-select">
               <option value="Feed">Feed / Khal</option>
+              <option value="Medicine">Medicine (Dawai)</option>
               <option value="General">General Item</option>
             </select>
           </div>
           <div class="col-6">
             <label class="form-label small fw-bold">Unit (Paimana)</label>
-            <select id="np_unit" class="form-select" onchange="onCategoryChange()">
+            <select id="np_unit" class="form-select" onchange="onUnitChange()">
+              <option value="KG">KG (Kilogram)</option>
               <option value="Packet">Packet</option>
               <option value="Pcs">Pcs (Nang)</option>
               <option value="Bottle">Bottle</option>
               <option value="Vial">Vial / Injection</option>
               <option value="Strip">Strip (Patti)</option>
-              <option value="KG">KG (Kilogram)</option>
               <option value="Liter">Liter</option>
             </select>
           </div>
         </div>
 
-        <!-- Bori Calculator (Sirf Feed/Khal ke liye dikhega) -->
-        <div id="bori_calc_box" class="p-2 border rounded bg-light mb-2" style="display: none;">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small fw-bold text-success"><i class="bi bi-calculator"></i> Bori Khareed Calculator</span>
-            <small class="text-muted">(Feed / Khal)</small>
+        <!-- Khal Special Toggle Switch -->
+        <div class="form-check form-switch p-2 bg-light border rounded mb-2" id="khal_toggle_box">
+          <input class="form-check-input ms-0 me-2" type="checkbox" id="np_is_khal" onchange="toggleKhalMode()">
+          <label class="form-check-label fw-bold text-success small" for="np_is_khal">
+            <i class="bi bi-toggle2-on me-1"></i> Yeh Khal Item Hai? (37 KG &amp; 40 KG Dual Option)
+          </label>
+        </div>
+
+        <!-- 37 KG & 40 KG Dual Bori Box (Sirf toggle ON par aayega) -->
+        <div id="khal_dual_box" class="p-2 border rounded bg-success-subtle mb-2" style="display: none;">
+          <div class="small fw-bold text-success mb-2"><i class="bi bi-calculator"></i> 37 KG aur 40 KG Boriyon Ka Hisaab:</div>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="small text-muted fw-bold">37 KG Wali Boriyan</label>
+              <input type="number" id="calc_bags_37" class="form-control form-control-sm" placeholder="Maslan 7" oninput="runDualKhalCalc()">
+            </div>
+            <div class="col-6">
+              <label class="small text-muted fw-bold">40 KG Wali Boriyan</label>
+              <input type="number" id="calc_bags_40" class="form-control form-control-sm" placeholder="Maslan 3" oninput="runDualKhalCalc()">
+            </div>
           </div>
           <div class="row g-2">
-            <div class="col-4">
-              <label class="small text-muted">Borian</label>
-              <input type="number" id="calc_bags" class="form-control form-control-sm" placeholder="10" oninput="runBagCalc()">
-            </div>
-            <div class="col-4">
-              <label class="small text-muted">Packing</label>
-              <select id="calc_bag_weight" class="form-select form-select-sm" onchange="runBagCalc()">
-                <option value="37">37 KG Bori</option>
-                <option value="40">40 KG Bori</option>
-                <option value="50">50 KG Bori</option>
-              </select>
-            </div>
-            <div class="col-4">
-              <label class="small text-muted">Bori Khareed Rate</label>
-              <input type="number" id="calc_bag_cost" class="form-control form-control-sm" placeholder="3700" oninput="runBagCalc()">
+            <div class="col-12">
+              <label class="small text-muted fw-bold">Bori Khareed Rate (Average Bori Cost)</label>
+              <input type="number" id="calc_bag_cost" class="form-control form-control-sm" placeholder="Maslan 3700" oninput="runDualKhalCalc()">
             </div>
           </div>
         </div>
 
+        <!-- Kul Stock Input -->
+        <div class="mb-2">
+          <label class="form-label small fw-bold" id="lbl_qty">Kul Stock (Quantity / KG)</label>
+          <input type="number" step="any" id="np_qty" class="form-control fw-bold text-success" placeholder="Total wazan ya tadad">
+        </div>
+
+        <!-- CP & SP (Khareed aur Bikri Rates) -->
         <div class="row g-2 mb-2">
           <div class="col-6">
-            <label class="form-label small fw-bold" id="lbl_qty">Kul Stock (Tadad)</label>
-            <input type="number" step="any" id="np_qty" class="form-control" placeholder="e.g. 50">
+            <label class="form-label small fw-bold" id="lbl_cost">Khareed Rate (CP)</label>
+            <input type="number" step="any" id="np_cost" class="form-control" placeholder="Cost per KG / Unit">
           </div>
-          <div class="col-6" id="box_bag_wt" style="display: none;">
-            <label class="form-label small fw-bold">Primary Bori Wazan (KG)</label>
-            <input type="number" step="any" id="np_bag_wt" class="form-control" value="37">
+          <div class="col-6">
+            <label class="form-label small fw-bold" id="lbl_sale">Bikri Rate (SP)</label>
+            <input type="number" step="any" id="np_sale" class="form-control" placeholder="Sale per KG / Unit">
           </div>
         </div>
 
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="form-label small fw-bold" id="lbl_cost">Khareed Price (Cost)</label>
-            <input type="number" step="any" id="np_cost" class="form-control" placeholder="Cost per unit">
-          </div>
-          <div class="col-6">
-            <label class="form-label small fw-bold" id="lbl_sale">Bikri Price (Sale)</label>
-            <input type="number" step="any" id="np_sale" class="form-control" placeholder="Sale per unit">
-          </div>
-        </div>
-
+        <!-- Low Stock Alert -->
         <div class="mb-2">
           <label class="form-label small fw-bold">Low Stock Alert Limit</label>
-          <input type="number" id="np_limit" class="form-control" value="5">
+          <input type="number" id="np_limit" class="form-control" value="20">
         </div>
       </div>
       <div class="modal-footer py-1">
@@ -161,7 +161,7 @@
   </div>
 </div>
 
-<!-- Add More Stock Modal -->
+<!-- Add More Stock Modal (Live 37 & 40 KG Addition) -->
 <div class="modal fade" id="addStockModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -171,43 +171,40 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="as_id">
+        <input type="hidden" id="as_is_khal">
         <input type="hidden" id="as_is_kg">
         <h6 class="fw-bold text-dark mb-1" id="as_name">-</h6>
         <div class="small text-muted mb-3" id="as_cur_stock">Mojooda Stock: -</div>
 
-        <!-- Bori buttons sirf Feed ke liye -->
-        <div id="as_mode_selector" class="mb-3">
-          <label class="form-label small fw-bold">Stock Entry Ka Tareeqa:</label>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-success active flex-fill" id="as_btn_bori" onclick="setAddStockMode('bori')">Bori Ke Hisaab Se</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" id="as_btn_kg" onclick="setAddStockMode('kg')">Seedha KG Mein</button>
-          </div>
-        </div>
-
-        <div id="as_bori_inputs">
-          <div class="row g-2 mb-2">
+        <!-- Agar Khal ho to 37 & 40 KG dono ka dabba aik sath aayega -->
+        <div id="as_khal_dual_box" class="p-2 border rounded bg-success-subtle mb-3" style="display: none;">
+          <div class="small fw-bold text-success mb-2"><i class="bi bi-box2-fill"></i> Khal Ki Boriyan Darj Karein:</div>
+          <div class="row g-2">
             <div class="col-6">
-              <label class="form-label small fw-bold">Packing Type</label>
-              <select id="as_packing" class="form-select" onchange="calcAddStock()">
-                <option value="37">37 KG Bori</option>
-                <option value="40">40 KG Bori</option>
-                <option value="50">50 KG Bori</option>
-              </select>
+              <label class="small text-muted fw-bold">37 KG Wali Boriyan</label>
+              <input type="number" id="as_bags_37" class="form-control" placeholder="0" oninput="calcAddStock()">
             </div>
             <div class="col-6">
-              <label class="form-label small fw-bold">Boriyon Ki Tadad</label>
-              <input type="number" id="as_bags_count" class="form-control" placeholder="10" oninput="calcAddStock()">
+              <label class="small text-muted fw-bold">40 KG Wali Boriyan</label>
+              <input type="number" id="as_bags_40" class="form-control" placeholder="0" oninput="calcAddStock()">
             </div>
           </div>
         </div>
 
+        <!-- Normal Aam Feed / Dawai ke liye -->
+        <div id="as_normal_box" class="mb-3" style="display: none;">
+          <label class="form-label small fw-bold" id="as_add_label">Kitni Tadad / Wazan Add Karna Hai?</label>
+          <input type="number" step="any" id="as_normal_qty" class="form-control" placeholder="0" oninput="calcAddStock()">
+        </div>
+
+        <!-- Total Jo Jama Hoga -->
         <div class="mb-3">
-          <label class="form-label small fw-bold" id="as_add_label">Kitni Tadad Stock Mein Add Karni Hai?</label>
-          <input type="number" step="any" id="as_total_qty_add" class="form-control fw-bold fs-5 text-success" placeholder="0">
+          <label class="form-label small fw-bold">Kul Jama Hone Wala Stock:</label>
+          <input type="number" step="any" id="as_total_qty_add" class="form-control fw-bold fs-5 text-success" readonly placeholder="0">
         </div>
 
         <div class="mb-2">
-          <label class="form-label small fw-bold">Nayi Khareed Price (Cost) - Optional</label>
+          <label class="form-label small fw-bold">Nayi Khareed Price (CP) - Optional</label>
           <input type="number" step="any" id="as_new_cost" class="form-control" placeholder="Agar rate badal gaya ho">
         </div>
       </div>
@@ -233,23 +230,17 @@
           <label class="form-label small fw-bold">Item Ka Naam</label>
           <input type="text" id="ep_name" class="form-control">
         </div>
-        <div class="row g-2 mb-2">
-          <div class="col-6">
-            <label class="form-label small fw-bold">Total Stock</label>
-            <input type="number" step="any" id="ep_qty" class="form-control">
-          </div>
-          <div class="col-6" id="ep_box_bag_wt">
-            <label class="form-label small fw-bold">Bori Packing (KG)</label>
-            <input type="number" step="any" id="ep_bag_wt" class="form-control">
-          </div>
+        <div class="mb-2">
+          <label class="form-label small fw-bold">Total Stock</label>
+          <input type="number" step="any" id="ep_qty" class="form-control">
         </div>
         <div class="row g-2 mb-2">
           <div class="col-6">
-            <label class="form-label small fw-bold">Khareed Price (Cost)</label>
+            <label class="form-label small fw-bold">Khareed Price (CP)</label>
             <input type="number" step="any" id="ep_cost" class="form-control">
           </div>
           <div class="col-6">
-            <label class="form-label small fw-bold">Bikri Price (Sale)</label>
+            <label class="form-label small fw-bold">Bikri Price (SP)</label>
             <input type="number" step="any" id="ep_sale" class="form-control">
           </div>
         </div>
@@ -267,9 +258,8 @@
 <script src="config.js"></script>
 <script>
 renderNav('stock.html');
-let P = [], addStockMode = 'bori';
+let P = [];
 
-// Console warning prevention for all modals
 document.querySelectorAll('.modal').forEach(m => {
   m.addEventListener('hide.bs.modal', () => {
     if (document.activeElement && m.contains(document.activeElement)) {
@@ -278,38 +268,47 @@ document.querySelectorAll('.modal').forEach(m => {
   });
 });
 
-function onCategoryChange() {
-  const cat = document.getElementById('np_cat').value;
+function onUnitChange() {
   const unit = document.getElementById('np_unit').value;
-  const isKgFeed = (cat === 'Feed' || unit === 'KG');
+  const isKg = (unit === 'KG');
+  document.getElementById('khal_toggle_box').style.display = isKg ? 'block' : 'none';
+  if (!isKg) {
+    document.getElementById('np_is_khal').checked = false;
+  }
+  toggleKhalMode();
+}
 
-  document.getElementById('bori_calc_box').style.display = isKgFeed ? 'block' : 'none';
-  document.getElementById('box_bag_wt').style.display = isKgFeed ? 'block' : 'none';
-
-  if (isKgFeed) {
-    document.getElementById('lbl_qty').textContent = 'Kul Stock (KG/Quantity)';
-    document.getElementById('lbl_cost').textContent = 'Khareed Price (Cost/KG)';
-    document.getElementById('lbl_sale').textContent = 'Khula Bikri Rate (Per KG)';
-    if (!+document.getElementById('np_bag_wt').value) document.getElementById('np_bag_wt').value = 37;
+function toggleKhalMode() {
+  const isKhal = document.getElementById('np_is_khal').checked;
+  const unit = document.getElementById('np_unit').value;
+  
+  if (isKhal) {
+    document.getElementById('khal_dual_box').style.display = 'block';
+    document.getElementById('lbl_qty').textContent = 'Kul Stock (37KG + 40KG Total KG)';
+    document.getElementById('lbl_cost').textContent = 'Khareed Rate (CP/KG)';
+    document.getElementById('lbl_sale').textContent = 'Khula Rate (SP/KG)';
+    runDualKhalCalc();
   } else {
+    document.getElementById('khal_dual_box').style.display = 'none';
     document.getElementById('lbl_qty').textContent = `Kul Stock (${unit})`;
-    document.getElementById('lbl_cost').textContent = `Khareed Rate (Per ${unit})`;
-    document.getElementById('lbl_sale').textContent = `Bikri Rate (Per ${unit})`;
-    document.getElementById('np_bag_wt').value = 0;
+    document.getElementById('lbl_cost').textContent = `Khareed Rate CP (${unit})`;
+    document.getElementById('lbl_sale').textContent = `Bikri Rate SP (${unit})`;
   }
 }
 
-function runBagCalc() {
-  const bags = +document.getElementById('calc_bags').value || 0;
-  const bagWt = +document.getElementById('calc_bag_weight').value || 37;
+function runDualKhalCalc() {
+  if (!document.getElementById('np_is_khal').checked) return;
+  const b37 = +document.getElementById('calc_bags_37').value || 0;
+  const b40 = +document.getElementById('calc_bags_40').value || 0;
   const bagCost = +document.getElementById('calc_bag_cost').value || 0;
 
-  if (bags > 0) {
-    document.getElementById('np_qty').value = (bags * bagWt).toFixed(1);
-    document.getElementById('np_bag_wt').value = bagWt;
+  const totalKg = (b37 * 37) + (b40 * 40);
+  if (totalKg > 0) {
+    document.getElementById('np_qty').value = totalKg;
   }
-  if (bagCost > 0 && bagWt > 0) {
-    const costPerKg = (bagCost / bagWt).toFixed(2);
+  
+  if (bagCost > 0) {
+    const costPerKg = (bagCost / 37).toFixed(2);
     document.getElementById('np_cost').value = costPerKg;
     document.getElementById('np_sale').value = (+costPerKg + 10).toFixed(2);
   }
@@ -329,18 +328,22 @@ function draw() {
   const q = s.value.toLowerCase();
   stock_table.innerHTML = P.filter(p => p.name.toLowerCase().includes(q)).map(p => {
     const isKg = (p.unit || '').toUpperCase() === 'KG';
+    const bagWt = +p.bag_weight || 0;
+    const isKhal = (bagWt === 37 || bagWt === 40) || (p.name || '').toLowerCase().includes('khal');
     let stockDisplay = '';
 
     if (isKg) {
       const totalKg = +p.stock_qty;
-      const b37 = Math.floor(totalKg / 37);
-      const b40 = Math.floor(totalKg / 40);
-      stockDisplay = `
-        <div class="fw-bold text-dark fs-6">${totalKg} KG</div>
-        <div class="bag-badge">
-          <i class="bi bi-box2-fill"></i> ${b37} Bori (37KG) ya ${b40} Bori (40KG)
-        </div>
-      `;
+      if (isKhal) {
+        const b37 = Math.floor(totalKg / 37);
+        const b40 = Math.floor(totalKg / 40);
+        stockDisplay = `
+          <div class="fw-bold text-dark fs-6">${totalKg} KG</div>
+          <div class="bag-badge"><i class="bi bi-box2-fill"></i> ~${b37} Bori (37KG) ya ${b40} Bori (40KG)</div>
+        `;
+      } else {
+        stockDisplay = `<div class="fw-bold text-dark fs-6">${totalKg} KG</div><small class="text-muted">Khula / Custom Stock</small>`;
+      }
     } else {
       stockDisplay = `
         <div class="fw-bold fs-6 text-dark">${p.stock_qty} <span class="small text-muted">${esc(p.unit)}</span></div>
@@ -352,9 +355,9 @@ function draw() {
       <tr>
         <td>
           <div class="fw-bold text-dark">${esc(p.name)}</div>
-          <small class="text-muted">${isKg ? 'Dual Packing: 37KG / 40KG' : esc(p.unit) + ' Packaging'}</small>
+          <small class="text-muted">${isKg ? (isKhal ? 'Khal Dual Packing (37/40 KG)' : 'Standard KG Feed') : esc(p.unit) + ' Packaging'}</small>
         </td>
-        <td><span class="badge ${p.category === 'Medicine' ? 'bg-info-subtle text-info-emphasis border border-info-subtle' : 'bg-light text-dark border'}">${esc(p.category || 'General')}</span></td>
+        <td><span class="badge ${p.category === 'Medicine' ? 'bg-info-subtle text-info-emphasis border border-info-subtle' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'}">${esc(p.category || 'General')}</span></td>
         <td>${rs(p.cost_price)}</td>
         <td class="fw-bold text-success">${rs(p.sale_price)}</td>
         <td>${stockDisplay}</td>
@@ -375,63 +378,60 @@ function openAddStockModal(id) {
   if (!p) return;
 
   const isKg = (p.unit || '').toUpperCase() === 'KG';
+  const bagWt = +p.bag_weight || 0;
+  const isKhal = (bagWt === 37 || bagWt === 40) || (p.name || '').toLowerCase().includes('khal');
+
   document.getElementById('as_id').value = p.id;
+  document.getElementById('as_is_khal').value = isKhal ? '1' : '0';
   document.getElementById('as_is_kg').value = isKg ? '1' : '0';
   document.getElementById('as_name').textContent = p.name;
   document.getElementById('as_cur_stock').textContent = `Mojooda Stock: ${p.stock_qty} ${p.unit}`;
-  document.getElementById('as_bags_count').value = '';
+  document.getElementById('as_bags_37').value = '';
+  document.getElementById('as_bags_40').value = '';
+  document.getElementById('as_normal_qty').value = '';
   document.getElementById('as_total_qty_add').value = '';
   document.getElementById('as_new_cost').value = '';
 
-  if (isKg) {
-    document.getElementById('as_mode_selector').style.display = 'block';
-    document.getElementById('as_add_label').textContent = 'Kul Kitne KG Stock Mein Add Hoga?';
-    setAddStockMode('bori');
+  if (isKhal) {
+    document.getElementById('as_khal_dual_box').style.display = 'block';
+    document.getElementById('as_normal_box').style.display = 'none';
   } else {
-    // Medicine / Non-KG item
-    document.getElementById('as_mode_selector').style.display = 'none';
-    document.getElementById('as_bori_inputs').style.display = 'none';
+    document.getElementById('as_khal_dual_box').style.display = 'none';
+    document.getElementById('as_normal_box').style.display = 'block';
     document.getElementById('as_add_label').textContent = `Kitne ${p.unit} Stock Mein Add Karne Hain?`;
   }
 
   new bootstrap.Modal(document.getElementById('addStockModal')).show();
 }
 
-function setAddStockMode(mode) {
-  addStockMode = mode;
-  document.getElementById('as_btn_bori').classList.toggle('active', mode === 'bori');
-  document.getElementById('as_btn_kg').classList.toggle('active', mode === 'kg');
-  document.getElementById('as_bori_inputs').style.display = (mode === 'bori') ? 'block' : 'none';
-  calcAddStock();
-}
-
 function calcAddStock() {
-  const isKg = document.getElementById('as_is_kg').value === '1';
-  if (isKg && addStockMode === 'bori') {
-    const packing = +document.getElementById('as_packing').value || 37;
-    const bags = +document.getElementById('as_bags_count').value || 0;
-    document.getElementById('as_total_qty_add').value = (packing * bags);
+  const isKhal = document.getElementById('as_is_khal').value === '1';
+  if (isKhal) {
+    const b37 = +document.getElementById('as_bags_37').value || 0;
+    const b40 = +document.getElementById('as_bags_40').value || 0;
+    document.getElementById('as_total_qty_add').value = (b37 * 37) + (b40 * 40);
+  } else {
+    document.getElementById('as_total_qty_add').value = +document.getElementById('as_normal_qty').value || 0;
   }
 }
 
 async function submitAddStock() {
   const id = +document.getElementById('as_id').value;
-  const isKg = document.getElementById('as_is_kg').value === '1';
+  const isKhal = document.getElementById('as_is_khal').value === '1';
   const p = P.find(x => x.id === id);
   const addQty = +document.getElementById('as_total_qty_add').value || 0;
   const newCost = +document.getElementById('as_new_cost').value || 0;
 
-  if (addQty <= 0) return toast('Baraye meharbani tadad darj karein', false);
+  if (addQty <= 0) return toast('Baraye meharbani boriyan ya tadad darj karein', false);
 
   const newTotalQty = (+p.stock_qty || 0) + addQty;
   let updateData = { stock_qty: newTotalQty };
 
   if (newCost > 0) {
-    if (isKg && addStockMode === 'bori') {
-      const packing = +document.getElementById('as_packing').value || 37;
-      const newCostPerKg = +(newCost / packing).toFixed(2);
-      updateData.cost_price = newCostPerKg;
-      updateData.sale_price = +(newCostPerKg + 10).toFixed(2);
+    if (isKhal) {
+      const costPerKg = +(newCost / 37).toFixed(2);
+      updateData.cost_price = costPerKg;
+      updateData.sale_price = +(costPerKg + 10).toFixed(2);
     } else {
       updateData.cost_price = newCost;
     }
@@ -439,7 +439,7 @@ async function submitAddStock() {
 
   try {
     await ok(db.from('kisan_vet_products').update(updateData).eq('id', id));
-    toast(`${addQty} ${p.unit} maal kamyabi se stock mein add ho gaya!`);
+    toast(`${addQty} ${p.unit} maal kamyabi se stock mein jama ho gaya!`);
     bootstrap.Modal.getInstance(document.getElementById('addStockModal')).hide();
     load();
   } catch (e) {
@@ -452,10 +452,11 @@ async function saveNewProduct() {
   const unit = np_unit.value;
   const category = np_cat.value;
   const stock_qty = +np_qty.value || 0;
-  const bag_weight = +np_bag_wt.value || 0;
+  const isKhal = document.getElementById('np_is_khal').checked;
+  const bag_weight = isKhal ? 37 : 0;
   const cost_price = +np_cost.value || 0;
   const sale_price = +np_sale.value || 0;
-  const min_limit = +np_limit.value || 5;
+  const min_limit = +np_limit.value || 20;
 
   if (!name) return toast('Item ka naam likhna zaroori hai', false);
 
@@ -474,15 +475,12 @@ async function saveNewProduct() {
 function openEdit(id) {
   const p = P.find(x => x.id === id);
   if (!p) return;
-  const isKg = (p.unit || '').toUpperCase() === 'KG';
 
   ep_id.value = p.id;
   ep_name.value = p.name;
   ep_qty.value = p.stock_qty;
-  ep_bag_wt.value = p.bag_weight || 0;
   ep_cost.value = p.cost_price;
   ep_sale.value = p.sale_price;
-  document.getElementById('ep_box_bag_wt').style.display = isKg ? 'block' : 'none';
 
   new bootstrap.Modal(document.getElementById('editProductModal')).show();
 }
@@ -492,7 +490,6 @@ async function updateProduct() {
     await ok(db.from('kisan_vet_products').update({
       name: ep_name.value.trim(),
       stock_qty: +ep_qty.value || 0,
-      bag_weight: +ep_bag_wt.value || 0,
       cost_price: +ep_cost.value || 0,
       sale_price: +ep_sale.value || 0
     }).eq('id', ep_id.value));
@@ -516,7 +513,7 @@ async function del(id) {
 }
 
 s.oninput = draw;
-onCategoryChange();
+onUnitChange();
 load();
 </script>
 </body>
