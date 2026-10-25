@@ -14,11 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
     .urdu { font-family: 'Noto Nastaliq Urdu', serif; }
     .pcard {
       cursor: pointer;
@@ -118,7 +114,6 @@
     .item-mode-btn.cash-active { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
     .item-mode-btn.udhaar-active { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
 
-    /* Dual Packing Buttons (Khula, 37KG Bori, 40KG Bori) */
     .pack-pill {
       font-size: 10px;
       padding: 2px 5px;
@@ -153,9 +148,10 @@
         <input id="s" class="form-control border-start-0" placeholder="Dawai, khal ya feed search karein..." autofocus>
       </div>
 
+      <!-- Filter Tabs -->
       <div class="d-flex gap-2 mb-3 overflow-x-auto pb-1">
         <button type="button" class="btn btn-sm btn-outline-success active" id="cat_all" onclick="filterCat('all')">Sab Items</button>
-        <button type="button" class="btn btn-sm btn-outline-success" id="cat_feed" onclick="filterCat('Feed / Khal')">Feed &amp; Khal</button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="cat_feed" onclick="filterCat('Feed')">Feed &amp; Khal</button>
         <button type="button" class="btn btn-sm btn-outline-success" id="cat_med" onclick="filterCat('Medicine')">Medicine</button>
         <button type="button" class="btn btn-sm btn-outline-success" id="cat_gen" onclick="filterCat('General')">General</button>
       </div>
@@ -166,15 +162,12 @@
     <!-- Right Column: POS Billing Cart -->
     <div class="col-lg-5">
       <div class="cart-container">
-        
         <div class="cart-header d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-bag-check-fill fs-5"></i>
             <span class="fw-bold fs-6">Billing Cart</span>
           </div>
-          <span class="badge bg-light text-success fw-bold px-3 py-2 rounded-pill" id="cart_badge_count">
-            0 Items
-          </span>
+          <span class="badge bg-light text-success fw-bold px-3 py-2 rounded-pill" id="cart_badge_count">0 Items</span>
         </div>
         
         <div class="cart-table-wrapper">
@@ -344,7 +337,7 @@ function filterCat(cat) {
     if (el) el.classList.remove('active');
   });
   if (cat === 'all') document.getElementById('cat_all').classList.add('active');
-  else if (cat === 'Feed / Khal') document.getElementById('cat_feed').classList.add('active');
+  else if (cat === 'Feed') document.getElementById('cat_feed').classList.add('active');
   else if (cat === 'Medicine') document.getElementById('cat_med').classList.add('active');
   else if (cat === 'General') document.getElementById('cat_gen').classList.add('active');
   grid();
@@ -363,20 +356,40 @@ function onCustomerSelect(val) {
 }
 
 function grid() {
-  const q = s.value.toLowerCase();
+  const q = s.value.toLowerCase().trim();
   const filtered = P.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(q);
-    const matchesCat = (activeCat === 'all') || (p.category === activeCat);
+    const pName = (p.name || '').toLowerCase();
+    const pCat = (p.category || '');
+    const matchesSearch = pName.includes(q);
+    
+    let matchesCat = false;
+    if (activeCat === 'all') {
+      matchesCat = true;
+    } else if (activeCat === 'Feed') {
+      matchesCat = pCat.includes('Feed') || pCat.includes('Khal');
+    } else {
+      matchesCat = (pCat === activeCat);
+    }
     return matchesSearch && matchesCat;
   });
 
   g.innerHTML = filtered.map(p => {
     const isKgItem = (p.unit || '').toUpperCase() === 'KG';
+    const bagWt = +p.bag_weight || 0;
+    const isKhal = (p.name || '').toLowerCase().includes('khal') || bagWt === 37;
+    
     let bagPill = '';
     if (isKgItem) {
-      const b37 = Math.floor(p.stock_qty / 37);
-      const b40 = Math.floor(p.stock_qty / 40);
-      bagPill = `<div class="small text-muted mt-1">Stock: <strong>${p.stock_qty} KG</strong> (~${b37} Bori)</div>`;
+      if (isKhal) {
+        const b37 = Math.floor(p.stock_qty / 37);
+        bagPill = `<div class="small text-muted mt-1">Stock: <strong>${p.stock_qty} KG</strong> (~${b37} Bori)</div>`;
+      } else if (bagWt > 0) {
+        const bags = Math.floor(p.stock_qty / bagWt);
+        const rem = Number((p.stock_qty % bagWt).toFixed(1));
+        bagPill = `<div class="small text-muted mt-1">Stock: <strong>${p.stock_qty} KG</strong> (~${bags} Bori ${rem > 0 ? '+ ' + rem + 'KG' : ''})</div>`;
+      } else {
+        bagPill = `<div class="small text-muted mt-1">Stock: <strong>${p.stock_qty} KG</strong> (Khula)</div>`;
+      }
     }
 
     return `
@@ -405,6 +418,8 @@ function add(id) {
   if (p.stock_qty <= 0) return toast('Stock khatam hai', false);
 
   const isKgItem = (p.unit || '').toUpperCase() === 'KG';
+  const bagWt = +p.bag_weight || 0;
+  const isKhal = (p.name || '').toLowerCase().includes('khal') || bagWt === 37;
   const c = cart.find(x => x.id === id && x.pack_mode === 'khula');
 
   if (c) {
@@ -416,7 +431,9 @@ function add(id) {
       name: p.name,
       unit: p.unit,
       is_kg: isKgItem,
-      pack_mode: 'khula', // 'khula', 'bori37', 'bori40'
+      is_khal: isKhal,
+      bag_weight: bagWt,
+      pack_mode: 'khula',
       deduct_kg_per_unit: 1,
       price: +p.sale_price,
       cost: +p.cost_price,
@@ -428,7 +445,7 @@ function add(id) {
   draw();
 }
 
-function setItemPackMode(i, mode) {
+function setItemPackMode(i, mode, customWt = 0) {
   const c = cart[i];
   const p = P.find(x => x.id === c.id);
   c.pack_mode = mode;
@@ -436,13 +453,16 @@ function setItemPackMode(i, mode) {
   if (mode === 'bori37') {
     c.deduct_kg_per_unit = 37;
     c.qty = 1;
-    // 37 KG bori wholesale price (Cost * 37 + thoda munafa)
     c.price = Math.round(p.cost_price * 37) + 120;
   } else if (mode === 'bori40') {
     c.deduct_kg_per_unit = 40;
     c.qty = 1;
-    // 40 KG bori wholesale price (Cost * 40 + thoda munafa)
     c.price = Math.round(p.cost_price * 40) + 130;
+  } else if (mode === 'bori_custom') {
+    const wt = customWt || c.bag_weight || 50;
+    c.deduct_kg_per_unit = wt;
+    c.qty = 1;
+    c.price = Math.round(p.cost_price * wt) + 150;
   } else {
     c.deduct_kg_per_unit = 1;
     c.qty = 1;
@@ -514,18 +534,33 @@ function draw() {
   document.getElementById('cart_badge_count').textContent = cart.length + ' Items';
   
   cart_.innerHTML = cart.map((c, i) => {
-    // 37 KG aur 40 KG Bori Buttons
-    const packSwitchHTML = c.is_kg ? `
-      <div class="d-flex gap-1 mt-1">
-        <span class="pack-pill ${c.pack_mode === 'khula' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'khula')">Khula KG</span>
-        <span class="pack-pill ${c.pack_mode === 'bori37' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori37')">37KG Bori</span>
-        <span class="pack-pill ${c.pack_mode === 'bori40' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori40')">40KG Bori</span>
-      </div>
-    ` : '';
+    let packSwitchHTML = '';
+    if (c.is_kg) {
+      if (c.is_khal) {
+        // Sirf Khal par 37KG aur 40KG option
+        packSwitchHTML = `
+          <div class="d-flex gap-1 mt-1">
+            <span class="pack-pill ${c.pack_mode === 'khula' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'khula')">Khula KG</span>
+            <span class="pack-pill ${c.pack_mode === 'bori37' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori37')">37KG Bori</span>
+            <span class="pack-pill ${c.pack_mode === 'bori40' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori40')">40KG Bori</span>
+          </div>
+        `;
+      } else if (c.bag_weight > 0) {
+        // Baqi feeds (jaise murghi feed 50KG)
+        const bWt = c.bag_weight;
+        packSwitchHTML = `
+          <div class="d-flex gap-1 mt-1">
+            <span class="pack-pill ${c.pack_mode === 'khula' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'khula')">Khula KG</span>
+            <span class="pack-pill ${c.pack_mode === 'bori_custom' ? 'active' : ''}" onclick="setItemPackMode(${i}, 'bori_custom', ${bWt})">${bWt}KG Bori</span>
+          </div>
+        `;
+      }
+    }
 
     let unitLabel = esc(c.unit);
     if (c.pack_mode === 'bori37') unitLabel = 'Bori (37KG)';
-    if (c.pack_mode === 'bori40') unitLabel = 'Bori (40KG)';
+    else if (c.pack_mode === 'bori40') unitLabel = 'Bori (40KG)';
+    else if (c.pack_mode === 'bori_custom') unitLabel = `Bori (${c.deduct_kg_per_unit}KG)`;
 
     return `
       <tr class="cart-row">
@@ -594,7 +629,7 @@ async function done() {
 
   done_.disabled = true;
   try {
-    // 1. Verify stock availability (Checking total required KG)
+    // 1. Verify stock availability
     for (const c of cart) {
       const p = await ok(db.from('kisan_vet_products').select('stock_qty,name').eq('id', c.id).single());
       const totalDeductKg = c.qty * c.deduct_kg_per_unit;
@@ -625,18 +660,19 @@ async function done() {
       }
     }
 
-    // 3. Deduct stock accurately in KGs
+    // 3. Deduct stock accurately
     for (const c of cart) {
       const p = await ok(db.from('kisan_vet_products').select('stock_qty').eq('id', c.id).single());
       const totalDeductKg = c.qty * c.deduct_kg_per_unit;
       await ok(db.from('kisan_vet_products').update({ stock_qty: +p.stock_qty - totalDeductKg }).eq('id', c.id));
     }
 
-    // 4. Save Sales Entry with Packing info
+    // 4. Save Sales Entry
     const saleItems = cart.map(c => {
       let label = c.name;
       if (c.pack_mode === 'bori37') label += ` (${c.qty} Bori - 37KG)`;
       else if (c.pack_mode === 'bori40') label += ` (${c.qty} Bori - 40KG)`;
+      else if (c.pack_mode === 'bori_custom') label += ` (${c.qty} Bori - ${c.deduct_kg_per_unit}KG)`;
 
       return {
         id: c.id,
